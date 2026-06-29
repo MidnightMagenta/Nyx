@@ -37,3 +37,11 @@ void *memcpyb(void *dest, const void *src, size_t len) {
     while (len--) { *dstPtr++ = *srcPtr++; }
     return dest;
 }
+
+int strcmpb(const char *a, const char *b) {
+    unsigned long i   = 0;
+    unsigned long res = 0;
+    while ((a[i] == b[i]) && (a[i] != '\0') && (b[i] != '\0')) { i++; }
+    res = ((unsigned char) a[i] - (unsigned char) b[i]);
+    return (int) res;
+}

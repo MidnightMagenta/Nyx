@@ -4,10 +4,12 @@
 #include <nyx/percpu.h>
 #include <nyx/proc.h>
 #include <nyx/refcount.h>
+#include <nyx/vfs.h>
 
 extern char init_stack_top[];
 
 struct vmspace __proc0_vmspace;
+struct files   __proc0_files;
 struct thread  proc0;
 struct process proc0_proc;
 
@@ -15,6 +17,8 @@ void proc0_init() {
     __proc0_vmspace.pgd = NULL;
     refcount_init(&__proc0_vmspace.refcount, 1);
     list_init(&__proc0_vmspace.vma_regions);
+
+    refcount_init(&__proc0_files.refs, 1);
 
     atomic_store_explicit(&proc0.flags, 0, ATOMIC_RELAXED);
     proc0.state  = TS_RUNNING;
@@ -36,9 +40,12 @@ void proc0_init() {
     proc0_proc.parent  = NULL;
     proc0_proc.xstatus = 0;
 
+    proc0_proc.cwd   = root_vnode;
+    proc0_proc.files = &__proc0_files;
+
     list_init(&proc0_proc.thrds_list);
-    list_init(&proc0_proc.children_head);
-    list_init(&proc0_proc.child_node);
+    list_init(&proc0_proc.children);
+    list_init(&proc0_proc.siblings);
     list_init(&proc0_proc.gproc_node);
     list_add_tail(&proc0.thrd_node, &proc0_proc.thrds_list);
     list_add_tail(&proc0_proc.gproc_node, &proc_list);

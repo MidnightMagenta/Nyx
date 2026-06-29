@@ -7,8 +7,10 @@
 #include <nyx/sched.h>
 #include <nyx/stddef.h>
 #include <nyx/string.h>
+#include <nyx/vfs.h>
 #include <nyx/wait.h>
 
+#include <asi/bootparam.h>
 #include <asi/bug.h>
 #include <asi/irq.h>
 
@@ -27,6 +29,7 @@ extern void init_memory();
 extern void init_irq();
 extern void init_timer();
 extern void init_sched();
+extern void init_vfs();
 extern void reaper(void *arg);
 void        init_proc(void *arg);
 
@@ -45,8 +48,18 @@ void start_kernel() {
     setup_arch();
     init_memory();
     init_irq();
+    init_vfs();
+    vfs_mount_root(vfs_find_fs("cpiofs"), __va((phys_addr_t) get_initramfs()));
     init_timer();
     init_sched();
+
+    struct file *test = NULL;
+    vfs_open("test/path/a/testfile.txt", 0, &test);
+
+    char buf[128];
+    memset(buf, 0, 128);
+    vfs_read(test, buf, 128);
+    printk("%s\n", buf);
 
     __do_kernel_tests();
 

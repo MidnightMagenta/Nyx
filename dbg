@@ -13,6 +13,9 @@ RR_DISK=(
 )
 
 case "${1:-}" in
+mkinitcpio)
+    ./scripts/mkinitcpio.sh
+    ;;
 mkimage)
     ./scripts/mkimage.sh
     ;;

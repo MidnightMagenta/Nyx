@@ -471,8 +471,13 @@ static int create_boot_params(u64                           bi,
                 break;
             case MB2_TAG_BOOTLAODER_NAME:
                 break;
-            case MB2_TAG_MODULE:
-                break;
+            case MB2_TAG_MODULE: {
+                struct mb2_tag_module *mod = (struct mb2_tag_module *) bi_tag;
+                if (strcmpb((const char *) mod->str, "initramfs") != 0) { break; }
+                printb("initramfs found at [0x%lx - 0x%lx]\n", mod->mod_start, mod->mod_end);
+                (*bootparams)->initramfs_base = mod->mod_start;
+                (*bootparams)->initramfs_size = mod->mod_end - mod->mod_start;
+            } break;
             case MB2_TAG_BASIC_MEMINFO:
                 break;
             case MB2_TAG_BOOTDEV:

@@ -10,6 +10,7 @@
 #include <nyx/proc.h>
 #include <nyx/sched.h>
 #include <nyx/syscall.h>
+#include <nyx/vfs.h>
 #include <nyx/wait.h>
 
 #include <asi/bug.h>
@@ -46,10 +47,10 @@ static void reparent_children(struct process *pr) {
     struct list_head *cur, *n;
     struct process   *child;
 
-    list_for_each_safe(cur, n, &pr->children_head) {
-        child = list_entry(cur, struct process, child_node);
+    list_for_each_safe(cur, n, &pr->children) {
+        child = list_entry(cur, struct process, siblings);
 
-        list_move_tail(&child->child_node, &initproc->proc->children_head);
+        list_move_tail(&child->siblings, &initproc->proc->children);
         child->parent = initproc->proc;
     }
 }
@@ -71,6 +72,8 @@ void __noreturn do_exit(struct thread *t, int code, int flags) {
 
     pr->state = PS_ZOMBIE;
     t->state  = TS_ZOMBIE;
+
+    files_put(pr->files);
 
     pr->xstatus = code;
 
@@ -103,8 +106,8 @@ static inline struct process *find_child(struct process *pr, pid_t pid, int flag
 again:
     sleep_setup(pr, "wait");
 
-    list_for_each(cur, &pr->children_head) {
-        child = list_entry(cur, struct process, child_node);
+    list_for_each(cur, &pr->children) {
+        child = list_entry(cur, struct process, siblings);
         if (child->state == PS_ZOMBIE && atomic_load_explicit(&child->flags, ATOMIC_ACQUIRE) & PF_REALZOMBIE) {
             if (pid == (pid_t) -1 || child->pid == pid) {
                 sleep_finish(0);
@@ -125,7 +128,7 @@ int do_wait(struct thread *t, pid_t pid, int *stat_loc, register_t *retval, int 
 
     pr_wait_debug("pid %d: waiting on %d with stat_loc %#p and flags %x\n", pr->pid, pid, stat_loc, flags);
     // we have no children we could wait for
-    if (list_is_empty(&pr->children_head)) {
+    if (list_is_empty(&pr->children)) {
         pr_wait_debug("pid %d: no children to wait on\n", pr->pid);
         return -ECHILD;
     }
@@ -141,7 +144,7 @@ int do_wait(struct thread *t, pid_t pid, int *stat_loc, register_t *retval, int 
 
     if (copyout(pr->mm, (virt_addr_t) stat_loc, (char *) &child->xstatus, sizeof(int))) { return -EFAULT; }
     *retval = child->pid;
-    list_del(&child->child_node);
+    list_del(&child->siblings);
 
     free_proc(child);
 

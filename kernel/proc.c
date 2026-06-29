@@ -28,7 +28,7 @@ struct thread *alloc_thread(int gfp_flags) {
 
 void free_proc(struct process *pr) {
     put_pid(pr->pid);
-    list_del(&pr->child_node);
+    list_del(&pr->siblings);
     list_del(&pr->gproc_node);
     kmem_cache_free(proc_struct_cache, pr);
 }

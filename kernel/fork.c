@@ -31,14 +31,15 @@ static inline int new_process(struct process *parent, int flags, struct process 
     if (!pr) { return -ENOMEM; }
 
     list_init(&pr->thrds_list);
-    list_init(&pr->children_head);
-    list_init(&pr->child_node);
+    list_init(&pr->children);
+    list_init(&pr->siblings);
 
     atomic_store_explicit(&pr->flags, 0, ATOMIC_RELAXED);
     pr->parent  = parent;
     pr->state   = PS_NEW;
     pr->pid     = get_pid();
     pr->xstatus = 0;
+    pr->cwd     = parent->cwd;
     refcount_init(&pr->live_thrd_cnt, 1);
 
     memcpy(pr->name, parent->name, PROC_NAME_LEN);
@@ -47,7 +48,7 @@ static inline int new_process(struct process *parent, int flags, struct process 
 
     atomic_fetch_or(&pr->flags, PF_EMBRYO, ATOMIC_RELAXED);
 
-    list_add_tail(&pr->child_node, &parent->children_head);
+    list_add_tail(&pr->siblings, &parent->children);
     list_add_tail(&pr->gproc_node, &proc_list);
 
     *newpr = pr;
@@ -97,6 +98,18 @@ static inline int fork_vmspace(struct process *parent, struct process *pr, int f
     return 0;
 }
 
+static inline int fork_files(struct process *parent, struct process *pr, int flags) {
+    if (flags & FORK_SHAREFD) {
+        pr->files = files_share(parent);
+        if (!pr->files) { return -ENOSPC; }
+    } else {
+        pr->files = files_fork(parent);
+        if (!pr->files) { return -ENOMEM; }
+    }
+
+    return 0;
+}
+
 static inline void fork_start_thread(struct thread *t) {
     setrunqueue(NULL, t);
 }
@@ -114,8 +127,8 @@ int do_fork(struct thread  *curp,
 
     if ((err = new_process(curpr, flags, &newpr))) { goto fail0; }
     if ((err = fork_vmspace(curpr, newpr, flags))) { goto fail1; }
-
-    if ((err = new_thread(newpr, &newthrd))) { goto fail2; }
+    if ((err = fork_files(curpr, newpr, flags))) { goto fail2; }
+    if ((err = new_thread(newpr, &newthrd))) { goto fail3; }
 
     arch_fork(curp, newthrd, func, arg ? arg : curp);
 
@@ -130,6 +143,7 @@ int do_fork(struct thread  *curp,
 
     return 0;
 
+fail3:
 fail2:
     vmspace_put(newpr->mm);
 fail1:

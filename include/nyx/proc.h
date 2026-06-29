@@ -3,6 +3,7 @@
 
 #include <mm/mm_types.h>
 #include <nyx/atomic.h>
+#include <nyx/vfs.h>
 #include <uapi/posix_types.h>
 
 #include <asi/cpu.h>
@@ -55,9 +56,12 @@ struct process {
     struct refcount  live_thrd_cnt;
     struct list_head thrds_list;
     struct process  *parent;
-    struct list_head children_head;
-    struct list_head child_node;
+    struct list_head children;
+    struct list_head siblings;
     int              xstatus;
+
+    struct vnode *cwd;
+    struct files *files;
 
     struct list_head gproc_node;
     char             name[PROC_NAME_LEN];
@@ -95,6 +99,7 @@ void  put_tid(pid_t tid);
 #define FORK_VFORK    (1 << 1)
 #define FORK_NOZOMBIE (1 << 2)
 #define FORK_SHAREVM  (1 << 3)
+#define FORK_SHAREFD  (1 << 4)
 
 #define EXIT_NORMAL (1 << 0)
 #define EXIT_THREAD (1 << 1)

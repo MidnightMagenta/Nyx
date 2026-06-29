@@ -198,6 +198,9 @@ void __init mmap_setup_map() {
     memcpy(&mmap_map, &bootparams->mem_map, sizeof(struct mmap_map));
     printk(pr_fmt("bootloader provided memory map:\n"));
     mmap_print_map();
+    mmap_add_region(bootparams->initramfs_base,
+                    bootparams->initramfs_base + bootparams->initramfs_size,
+                    MMAP_TYPE_RESERVED);
     mmap_sanitize(mmap_map.map, ARRAY_SIZE(mmap_map.map), &mmap_map.nr_entries);
 #ifdef __DEBUG
     printk(pr_fmt("sanitized memory map:\n"));
