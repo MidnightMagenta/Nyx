@@ -73,7 +73,7 @@ void __noreturn do_exit(struct thread *t, int code, int flags) {
     pr->state = PS_ZOMBIE;
     t->state  = TS_ZOMBIE;
 
-    files_put(pr->files);
+    fdfree(t->proc);
 
     pr->xstatus = code;
 
@@ -126,7 +126,7 @@ int do_wait(struct thread *t, pid_t pid, int *stat_loc, register_t *retval, int 
     struct process *pr = t->proc;
     struct process *child;
 
-    pr_wait_debug("pid %d: waiting on %d with stat_loc %#p and flags %x\n", pr->pid, pid, stat_loc, flags);
+    pr_wait_debug("pid %d: waiting on [pid: %d] with stat_loc %#p and flags %x\n", pr->pid, pid, stat_loc, flags);
     // we have no children we could wait for
     if (list_is_empty(&pr->children)) {
         pr_wait_debug("pid %d: no children to wait on\n", pr->pid);
@@ -140,9 +140,9 @@ int do_wait(struct thread *t, pid_t pid, int *stat_loc, register_t *retval, int 
         return 0;
     }
 
-    pr_wait_debug("pid %d: waited on %d with exit status %d\n", pr->pid, child->pid, child->xstatus);
+    pr_wait_debug("pid %d: waited on [pid: %d] with exit status %d\n", pr->pid, child->pid, child->xstatus);
 
-    if (copyout(pr->mm, (virt_addr_t) stat_loc, (char *) &child->xstatus, sizeof(int))) { return -EFAULT; }
+    if (copyout(stat_loc, (char *) &child->xstatus, sizeof(int))) { return -EFAULT; }
     *retval = child->pid;
     list_del(&child->siblings);
 

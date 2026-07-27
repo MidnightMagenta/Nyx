@@ -60,8 +60,7 @@ struct process {
     struct list_head siblings;
     int              xstatus;
 
-    struct vnode *cwd;
-    struct files *files;
+    struct filedesc *fd;
 
     struct list_head gproc_node;
     char             name[PROC_NAME_LEN];

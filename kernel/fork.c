@@ -12,6 +12,12 @@
 
 #include <asi/address.h>
 
+#ifdef CONFIG_DEBUG_FORK
+#define pr_fork_debug(fmt, ...) printk("syscall/fork:%d: " fmt, __LINE__, ##__VA_ARGS__)
+#else
+#define pr_wait_debug(fmt, ...) /* void */
+#endif
+
 extern void arch_fork(struct thread *t1, struct thread *t2, void (*func)(void *), void *arg);
 extern void child_return(void *arg);
 
@@ -39,7 +45,6 @@ static inline int new_process(struct process *parent, int flags, struct process 
     pr->state   = PS_NEW;
     pr->pid     = get_pid();
     pr->xstatus = 0;
-    pr->cwd     = parent->cwd;
     refcount_init(&pr->live_thrd_cnt, 1);
 
     memcpy(pr->name, parent->name, PROC_NAME_LEN);
@@ -99,13 +104,10 @@ static inline int fork_vmspace(struct process *parent, struct process *pr, int f
 }
 
 static inline int fork_files(struct process *parent, struct process *pr, int flags) {
-    if (flags & FORK_SHAREFD) {
-        pr->files = files_share(parent);
-        if (!pr->files) { return -ENOSPC; }
-    } else {
-        pr->files = files_fork(parent);
-        if (!pr->files) { return -ENOMEM; }
-    }
+    (void) flags;
+
+    pr->fd = fdcopy(parent->fd);
+    if (!pr->fd) { return -ENOMEM; }
 
     return 0;
 }
@@ -135,6 +137,8 @@ int do_fork(struct thread  *curp,
     if (newproc) { *newproc = newthrd; }
     if (retval) { *retval = newpr->pid; }
 
+    pr_fork_debug("forked process [pid: %d] from process [pid: %d]\n", newpr->pid, curp->proc->pid);
+
     newpr->state = PS_NORMAL;
 
     atomic_fetch_and(&newpr->flags, ~PF_EMBRYO, ATOMIC_RELEASE);
@@ -144,6 +148,7 @@ int do_fork(struct thread  *curp,
     return 0;
 
 fail3:
+    fdfree(newpr);
 fail2:
     vmspace_put(newpr->mm);
 fail1:

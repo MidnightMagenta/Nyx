@@ -24,6 +24,9 @@ typedef __ATOMIC(unsigned long long) atomic_ullong_t;
 
 typedef atomic_int_t atomic_t;
 
+#define atomic_test_and_set(aptr, memorder) __atomic_test_and_set(&(aptr)->__val, memorder)
+#define atomic_clear(aptr, memorder)        __atomic_clear(&(aptr)->__val, memorder)
+
 #define atomic_load_explicit(aptr, memorder)     __atomic_load_n(&(aptr)->__val, (memorder))
 #define atomic_load(aptr)                        atomic_load_explicit(aptr, ATOMIC_ACQUIRE)
 #define atomic_store_explicit(aptr, v, memorder) __atomic_store_n(&(aptr)->__val, (v), (memorder))

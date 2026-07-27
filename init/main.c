@@ -1,3 +1,4 @@
+#include <fs/cpio.h>
 #include <mm/mm_types.h>
 #include <mm/vmspace.h>
 #include <nyx/current.h>
@@ -30,11 +31,20 @@ extern void init_irq();
 extern void init_timer();
 extern void init_sched();
 extern void init_vfs();
+extern void init_filesystems();
 extern void reaper(void *arg);
 void        init_proc(void *arg);
 
 extern struct thread proc0;
 struct thread       *initproc;
+
+static void mount_root() {
+    struct cpio_args args = {
+            .base = __va(get_initramfs()),
+            .len  = get_initramfs_len(),
+    };
+    BUG_ON(vfs_mountroot("cpio", &args));
+}
 
 static void start_init() {
     if (do_fork(&proc0, FORK_NOZOMBIE | FORK_SHAREVM, &init_proc, NULL, NULL, &initproc) != 0) {
@@ -49,16 +59,29 @@ void start_kernel() {
     init_memory();
     init_irq();
     init_vfs();
-    vfs_mount_root(vfs_find_fs("cpiofs"), __va((phys_addr_t) get_initramfs()));
+    init_filesystems();
+    mount_root();
     init_timer();
     init_sched();
 
-    struct file *test = NULL;
-    vfs_open("test/path/a/testfile.txt", 0, &test);
+    struct nameidata nd;
+    nd.ni_dirp   = "/../../test/path/a/../a/././..///../path/a//testfile.txt";
+    nd.ni_segflg = UIO_SYSSPACE;
+    nd.ni_op     = NAMEI_LOOKUP;
+    nd.ni_flags  = 0;
+    nd.ni_proc   = current()->proc;
 
-    char buf[128];
-    memset(buf, 0, 128);
-    vfs_read(test, buf, 128);
+    if (!namei(&nd)) {
+        printk("Found vnode: %#p\n", nd.ni_vp);
+    } else {
+        printk("namei failed :(\n");
+    }
+
+    char buf[256];
+    memset(buf, 0, 256);
+
+    vn_rdwr(UIO_READ, nd.ni_vp, buf, 255, 0, NULL);
+
     printk("%s\n", buf);
 
     __do_kernel_tests();

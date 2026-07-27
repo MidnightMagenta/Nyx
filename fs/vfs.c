@@ -1,169 +1,221 @@
-#include <mm/mm_types.h>
+#include <mm/kmalloc.h>
 #include <mm/slab.h>
-#include <nyx/current.h>
+#include <mm/vmspace.h>
 #include <nyx/errno.h>
 #include <nyx/linkage.h>
 #include <nyx/list.h>
-#include <nyx/percpu.h>
-#include <nyx/refcount.h>
 #include <nyx/string.h>
+#include <nyx/uio.h>
 #include <nyx/vfs.h>
 
-static LIST_HEAD(fs_list);
-struct vnode *root_vnode;
+#include <asi/bug.h>
+
+struct vnode *rootvnode;
+LIST_HEAD(mountlist);
 
 static kmem_cache_t *vnode_cache;
+static kmem_cache_t *mount_cache;
 
-extern void         init_files();
-extern void         cpio_init();
-extern struct file *file_alloc(int mflags);
-extern void         file_free(struct file *f);
+struct vfsconf {
+    const char          *vc_name;
+    const struct vfsops *vc_ops;
+    struct list_head     vc_link;
+};
+static LIST_HEAD(vfsconf_list);
 
 void __init init_vfs() {
     vnode_cache = kmem_create_cache("vnode", sizeof(struct vnode), _Alignof(struct vnode), NULL, NULL, 0);
-
-    init_files();
-    cpio_init();
+    mount_cache = kmem_create_cache("mount", sizeof(struct mount), _Alignof(struct vnode), NULL, NULL, 0);
+    BUG_ON(!vnode_cache || !mount_cache);
 }
 
-void vget(struct vnode *v) {
-    refcount_inc(&v->refs);
-}
+// NOTE: probably temporary
+extern void cpiofs_init();
 
-void vput(struct vnode *v) {
-    if (refcount_get_dec(&v->refs) == 1) {
-        if (v->ops->reclaim) { v->ops->reclaim(v); }
-    }
+void __init init_filesystems() {
+    cpiofs_init();
 }
+// ENDNOTE
 
-struct vnode *vnode_alloc(int mflags) {
-    return kmem_cache_alloc(vnode_cache, mflags);
-}
+int getnewvnode(struct mount *mp, const struct vnodeops *ops, enum vtype type, struct vnode **vpp) {
+    struct vnode *vp = kmem_cache_alloc(vnode_cache, M_SLEEPOK);
+    if (!vp) { return ENOMEM; }
 
-void vnode_free(struct vnode *v) {
-    kmem_cache_free(vnode_cache, v);
-}
+    memset(vp, 0, sizeof(*vp));
+    vp->v_type        = type;
+    vp->v_op          = ops;
+    vp->v_mount       = mp;
+    vp->v_mountedhere = NULL;
+    refcount_set(&vp->v_ref, 1);
 
-int vfs_register_fs(struct fs_type *fs) {
-    list_add_tail(&fs->node, &fs_list);
+    *vpp = vp;
     return 0;
 }
 
-struct fs_type *vfs_find_fs(const char *name) {
-    struct list_head *cur;
-    struct fs_type   *fs;
+void vref(struct vnode *vp) {
+    BUG_ON(refcount_get(&vp->v_ref) == 0);
+    refcount_inc(&vp->v_ref);
+}
 
-    list_for_each(cur, &fs_list) {
-        fs = list_entry(cur, struct fs_type, node);
-        if (strcmp(name, fs->name) == 0) { return fs; }
+static void vgone(struct vnode *vp) {
+    BUG_ON(refcount_get(&vp->v_ref) != 0);
+    BUG_ON(vp->v_mountedhere != NULL);
+
+    (void) VOP_RECLAIM(vp);
+    kmem_cache_free(vnode_cache, vp);
+}
+
+void vrele(struct vnode *vp) {
+    if (!refcount_dec_and_test(&vp->v_ref)) { return; }
+    (void) VOP_INACTIVE(vp);
+    vgone(vp);
+}
+
+void vput(struct vnode *vp) {
+    VOP_UNLOCK(vp);
+    vrele(vp);
+}
+
+int vfs_register(const char *name, const struct vfsops *ops) {
+    BUG_ON(!ops->vfs_mount || !ops->vfs_unmount || !ops->vfs_root || !ops->vfs_statfs);
+
+    struct vfsconf *vc = kmalloc(sizeof(struct vfsconf), M_SLEEPOK);
+    if (!vc) { return -ENOMEM; }
+    vc->vc_name = name;
+    vc->vc_ops  = ops;
+    list_add(&vc->vc_link, &vfsconf_list);
+    return 0;
+}
+
+const struct vfsops *vfs_byname(const char *name) {
+    struct vfsconf *vc;
+    list_for_each_entry(vc, &vfsconf_list, vc_link) {
+        if (strcmp(vc->vc_name, name) == 0) { return vc->vc_ops; }
     }
-
     return NULL;
 }
 
-int vfs_mount_root(struct fs_type *fs, void *arg) {
-    int         res;
-    struct vfs *rootfs;
+int do_mount(const char *fsname, struct vnode *covered, void *data, struct mount **mpp) {
+    struct mount        *mp;
+    const struct vfsops *ops;
+    int                  error;
 
-    if ((res = fs->mount(fs, arg, &rootfs))) { return res; }
+    ops = vfs_byname(fsname);
+    if (!ops) { return -ENODEV; }
 
-    rootfs->covered = NULL;
-    root_vnode      = rootfs->root;
-    vget(root_vnode);
-    return 0;
-}
+    if (covered && covered->v_mountedhere) { return -EBUSY; }
 
-static const char *next_comp(const char *path, char *comp) {
-    while (*path == '/') { path++; }
+    mp = kmem_cache_alloc(mount_cache, M_SLEEPOK);
+    if (!mp) { return -ENOMEM; }
+    memset(mp, 0, sizeof(*mp));
+    mp->mnt_op           = ops;
+    mp->mnt_vnodecovered = covered;
 
-    if (*path == '\0') { return NULL; }
-
-    size_t i = 0;
-    while (*path != '/' && *path != '\0') {
-        if (i < NAME_MAX) { comp[i++] = *path; }
-        path++;
-    }
-    comp[i] = '\0';
-
-    return path;
-}
-
-int namei(const char *path, struct vnode **out) {
-    struct vnode *cur, *next;
-    char          comp[NAME_MAX + 1];
-    int           err;
-
-    cur = (path[0] == '/') ? root_vnode : current()->proc->cwd;
-
-    while ((path = next_comp(path, comp)) != NULL) {
-        if (comp[0] == '\0' || strcmp(comp, ".") == 0) { continue; }
-        if (cur->type != VDIR) {
-            vput(cur);
-            return -ENOTDIR;
-        }
-
-        if (strcmp(comp, "..") == 0) {
-            if (cur == cur->vfs->root && cur->vfs->covered) {
-                next = cur->vfs->covered;
-                vget(next);
-                vput(cur);
-                cur = next;
-            }
-        }
-
-        err = cur->ops->lookup(cur, comp, &next);
-        vput(cur);
-        if (err) { return err; }
-        cur = next;
-
-        while (cur->mounted) {
-            next = cur->mounted->root;
-            vget(next);
-            vput(cur);
-            cur = next;
-        }
+    error = VFS_MOUNT(mp, data);
+    if (error) {
+        kmem_cache_free(mount_cache, mp);
+        return error;
     }
 
-    *out = cur;
-    return 0;
-}
-
-int vfs_open(const char *path, int flags, struct file **out) {
-    struct vnode *v;
-    int           err;
-
-    if ((err = namei(path, &v))) { return err; }
-    *out = file_alloc(M_SLEEPOK);
-    if (!*out) {
-        err = -ENOMEM;
-        goto fail0;
+    struct vnode *root;
+    error = VFS_ROOT(mp, &root);
+    if (error) {
+        VFS_UNMOUNT(mp, 0);
+        kmem_cache_free(mount_cache, mp);
+        return error;
     }
+    mp->mnt_root = root;
 
-    memset(*out, 0, sizeof(struct file));
-    refcount_init(&(*out)->refs, 1);
-    (*out)->vn    = v;
-    (*out)->flags = flags;
+    if (covered) {
+        vref(covered);
+        covered->v_mountedhere = mp;
+    }
+    list_add(&mp->mnt_link, &mountlist);
 
-    return 0;
-
-fail0:
-    vput(v);
-    return err;
-}
-
-int vfs_close(struct file *f) {
-    fput(f);
+    if (mpp) { *mpp = mp; }
     return 0;
 }
 
-int vfs_dup(struct file *f, struct file **newf) {
-    *newf = file_alloc(M_SLEEPOK);
-    if (!*newf) { return -ENOMEM; }
+int do_unmount(struct mount *mp, int flags) {
+    struct vnode *covered = mp->mnt_vnodecovered;
+    int           error;
 
-    memset(*newf, 0, sizeof(struct file));
-    refcount_init(&(*newf)->refs, 1);
-    (*newf)->vn    = f->vn;
-    (*newf)->flags = f->flags;
+    BUG_ON(mp->mnt_root && refcount_get(&mp->mnt_root->v_ref) != 1);
 
+    if (covered) {
+        covered->v_mountedhere = NULL;
+        vrele(covered);
+    }
+    if (mp->mnt_root) { vrele(mp->mnt_root); }
+
+    error = VFS_UNMOUNT(mp, flags);
+    if (error) { return error; }
+
+    list_del(&mp->mnt_link);
+    kmem_cache_free(mount_cache, mp);
     return 0;
+}
+
+int vfs_mountroot(const char *fsname, void *data) {
+    struct mount *mp;
+    int           error = do_mount(fsname, NULL, data, &mp);
+    if (error) { return error; }
+
+    error = VFS_ROOT(mp, &rootvnode);
+    return error;
+}
+
+int vop_nolookup(struct vnode *v, struct vnode **vpp, struct componentname *c) {
+    (void) v;
+    (void) vpp;
+    (void) c;
+    return ENOTDIR;
+}
+int vop_noopen(struct vnode *v, int m) {
+    (void) v;
+    (void) m;
+    return 0;
+}
+int vop_noclose(struct vnode *v, int m) {
+    (void) v;
+    (void) m;
+    return 0;
+}
+int vop_noread(struct vnode *v, struct uio *u, int f) {
+    (void) v;
+    (void) u;
+    (void) f;
+    return EISDIR;
+}
+int vop_nowrite(struct vnode *v, struct uio *u, int f) {
+    (void) v;
+    (void) u;
+    (void) f;
+    return EISDIR;
+}
+int vop_noioctl(struct vnode *v, unsigned long c, void *d) {
+    (void) v;
+    (void) c;
+    (void) d;
+    return ENOTTY;
+}
+int vop_noreaddir(struct vnode *v, struct uio *u) {
+    (void) v;
+    (void) u;
+    return ENOTDIR;
+}
+int vop_noreadlink(struct vnode *v, struct uio *u) {
+    (void) v;
+    (void) u;
+    return EINVAL;
+}
+int vop_null(struct vnode *v) {
+    (void) v;
+    return 0;
+}
+
+void vops_check(const struct vnodeops *ops) {
+    BUG_ON(!ops->vop_lookup || !ops->vop_open || !ops->vop_close || !ops->vop_read || !ops->vop_write ||
+           !ops->vop_ioctl || !ops->vop_getattr || !ops->vop_readdir || !ops->vop_readlink || !ops->vop_inactive ||
+           !ops->vop_reclaim);
 }

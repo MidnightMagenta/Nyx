@@ -37,5 +37,7 @@
 #define ERANGE        34 /* Math result not representable */
 #define EADDRNOTAVAIL 35 /* Address not available */
 #define ENOSYS        36 /* No syscall */
+#define ENAMETOOLONG  37 /* Name too long */
+#define ELOOP         38 /* Is a cycle */
 
 #endif

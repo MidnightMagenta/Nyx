@@ -21,7 +21,8 @@ struct boot_params {
 
 extern struct boot_params *bootparams;
 
-#define bootparams_virt() ((struct boot_params *) __va(bootparams))
-#define get_initramfs()   ((void *) bootparams_virt()->initramfs_base)
+#define bootparams_virt()   ((struct boot_params *) __va(bootparams))
+#define get_initramfs()     ((void *) bootparams_virt()->initramfs_base)
+#define get_initramfs_len() (bootparams_virt()->initramfs_size)
 
 #endif

@@ -8,17 +8,15 @@
 
 extern char init_stack_top[];
 
-struct vmspace __proc0_vmspace;
-struct files   __proc0_files;
-struct thread  proc0;
-struct process proc0_proc;
+struct vmspace  __proc0_vmspace;
+struct filedesc __proc0_files;
+struct thread   proc0;
+struct process  proc0_proc;
 
 void proc0_init() {
     __proc0_vmspace.pgd = NULL;
     refcount_init(&__proc0_vmspace.refcount, 1);
     list_init(&__proc0_vmspace.vma_regions);
-
-    refcount_init(&__proc0_files.refs, 1);
 
     atomic_store_explicit(&proc0.flags, 0, ATOMIC_RELAXED);
     proc0.state  = TS_RUNNING;
@@ -40,8 +38,7 @@ void proc0_init() {
     proc0_proc.parent  = NULL;
     proc0_proc.xstatus = 0;
 
-    proc0_proc.cwd   = root_vnode;
-    proc0_proc.files = &__proc0_files;
+    fdinit(&proc0_proc);
 
     list_init(&proc0_proc.thrds_list);
     list_init(&proc0_proc.children);

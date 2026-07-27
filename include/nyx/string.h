@@ -16,6 +16,7 @@ const char *strchr(const char *s, int z);
 const char *strrchr(const char *s, int z);
 char       *strcpy(char *restrict dest, const char *restrict src);
 char       *strncpy(char *restrict dest, const char *restrict src, size_t len);
+size_t      strlcpy(char *restrict dest, const char *restrict src, size_t len);
 size_t      strlen(const char *s);
 size_t      strnlen(const char *s, size_t count);
 int         vsprintf(char *buf, const char *fmt, va_list args);
