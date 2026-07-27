@@ -19,6 +19,7 @@ static inline void clear_bit(int nr, void *addr) {
 #define __ilog2l(x)  (63 - __builtin_clzl(x))
 #define __ilog2ll(x) (63 - __builtin_clzll(x))
 
-#define ilog2(x) _Generic((x), unsigned int: __ilog2i(x), unsigned long: __ilog2l(x), unsigned long long: __ilog2ll(x))
+#define ilog2(x)  _Generic((x), unsigned int: __ilog2i(x), unsigned long: __ilog2l(x), unsigned long long: __ilog2ll(x))
+#define cilog2(x) ((x) <= 1 ? 0 : ilog2((x) - 1) + 1)
 
 #endif
