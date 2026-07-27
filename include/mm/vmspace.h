@@ -4,6 +4,7 @@
 #include <mm/mm_types.h>
 #include <mm/virtmem.h>
 #include <nyx/atomic.h>
+#include <nyx/current.h>
 #include <nyx/proc.h>
 
 struct vmspace *vmspace_fork(struct process *p);
@@ -15,12 +16,16 @@ int             vmspace_map(struct vmspace *mm, virt_addr_t addr, size_t len, un
 int  vmspace_mapcopy(struct vmspace *mm, virt_addr_t addr, void *data, size_t len, unsigned long flags, int gfp_flags);
 void vmspace_unmap(struct vmspace *mm, virt_addr_t addr, size_t len);
 
-static inline int copyout(struct vmspace *mm, virt_addr_t dstva, char *src, size_t len) {
-    return vm_copyout(mm->pgd, dstva, src, len);
+static inline int copyout(const void *uaddr, void *kaddr, size_t len) {
+    return vm_copyout(current()->proc->mm->pgd, (virt_addr_t) uaddr, kaddr, len);
 }
 
-static inline int copyin(struct vmspace *mm, char *dst, virt_addr_t srcva, size_t len) {
-    return vm_copyin(mm->pgd, dst, srcva, len);
+static inline int copyin(void *kaddr, const void *uaddr, size_t len) {
+    return vm_copyin(current()->proc->mm->pgd, kaddr, (virt_addr_t) uaddr, len);
+}
+
+static inline int copyinstr(void *kaddr, const void *uaddr, size_t len, size_t *done) {
+    return vm_copyinstr(current()->proc->mm->pgd, kaddr, (virt_addr_t) uaddr, len, done);
 }
 
 #endif

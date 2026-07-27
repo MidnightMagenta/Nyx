@@ -22,6 +22,7 @@ void        vm_activate(pgd_t *pgd);
 phys_addr_t vm_getphys(pgd_t *pgd, virt_addr_t virt);
 int         vm_copyout(pgd_t *pgd, virt_addr_t dst_virt, char *src, size_t len);
 int         vm_copyin(pgd_t *pgd, char *dst, virt_addr_t src_virt, size_t len);
+int         vm_copyinstr(pgd_t *pgd, void *dst, virt_addr_t srcva, size_t len, size_t *done);
 int         vm_access_ok(pgd_t *pgd, virt_addr_t virt, size_t len);
 
 static inline void *vm_getva(pgd_t *pgd, virt_addr_t virt) {

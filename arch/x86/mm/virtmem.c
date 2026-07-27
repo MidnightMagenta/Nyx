@@ -577,6 +577,54 @@ int vm_copyin(pgd_t *pgd, char *dst, virt_addr_t src_virt, size_t len) {
     return 0;
 }
 
+int vm_copyinstr(pgd_t *pgd, void *dst, virt_addr_t srcva, size_t len, size_t *done) {
+    size_t      n;
+    phys_addr_t pa;
+    virt_addr_t va;
+    char       *d;
+    const char *s;
+
+    *done = 0;
+
+    while (len > 0) {
+        va = PG_ALIGN_DN(srcva);
+        pa = vm_getphys(pgd, va);
+
+        if (pa == INVALID_PHYS_ADDR) { return -EADDRNOTAVAIL; }
+
+        n = PAGE_SIZE - (srcva - va);
+        if (n > len) { n = len; }
+
+        if (!vm_access_ok(pgd, va, n)) { return -EACCES; }
+
+        d = dst;
+        s = __va(pa + (srcva - va));
+
+        if (d < s) {
+            while (len--) {
+                if (!*s) { return 0; }
+                *d++ = *s++;
+                (*done)++;
+            }
+        } else {
+            char *lasts = (char *) (s + (len - 1));
+            char *lastd = d + (len - 1);
+
+            while (len--) {
+                if (!*s) { return 0; }
+                *lastd-- = *lasts--;
+                (*done)++;
+            }
+        }
+
+        len -= n;
+        dst += n;
+        srcva = va + PAGE_SIZE;
+    }
+
+    return 0;
+}
+
 int vm_access_ok(pgd_t *pgd, virt_addr_t virt, size_t len) {
     pgd_t *pte;
     if (virt < ARCH_USER_START || virt + len > ARCH_USER_END) { return 0; }
