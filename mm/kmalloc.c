@@ -24,8 +24,10 @@ void __init kmalloc_init() {
 }
 
 void *kmalloc(unsigned long size, int flags) {
-    int idx = MAX((int) ilog2(size), ilog2((unsigned long) KMALLOC_SMALLEST)) - ilog2((unsigned long) KMALLOC_SMALLEST);
-    if (idx >= KMALLOC_NUM_SIZES) { return NULL; }
+    if (size == 0) return NULL;
+    int order = MAX((int) cilog2(size), ilog2((unsigned long) KMALLOC_SMALLEST));
+    int idx   = order - ilog2((unsigned long) KMALLOC_SMALLEST);
+    if (idx >= KMALLOC_NUM_SIZES) return NULL;
     return kmem_cache_alloc(kmalloc_caches[idx], flags);
 }
 
