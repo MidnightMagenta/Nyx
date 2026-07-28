@@ -34,7 +34,6 @@ struct vattr {
     u32        va_rdev;
 };
 
-typedef u32 dev_t;
 #define makedev(maj, min) ((dev_t) (((maj) << 20) | ((min) & 0xfffff)))
 #define major(d)          ((uint32_t) ((d) >> 20))
 #define minor(d)          ((uint32_t) ((d) & 0xfffff))

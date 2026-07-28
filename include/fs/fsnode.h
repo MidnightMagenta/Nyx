@@ -1,8 +1,12 @@
 #ifndef _NYX_FSNODE_H
 #define _NYX_FSNODE_H
 
+#include <nyx/list.h>
+#include <nyx/stddef.h>
 #include <nyx/types.h>
 #include <nyx/vfs.h>
+
+struct uio;
 
 struct dirent {
     u64  d_fileno;

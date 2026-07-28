@@ -1,3 +1,5 @@
+#include <nyx/types.h>
+
 #include <asi/desc.h>
 #include <asi/descriptors.h>
 #include <asi/gdt.h>

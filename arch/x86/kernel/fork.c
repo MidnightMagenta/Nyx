@@ -1,8 +1,11 @@
 #include <nyx/proc.h>
 #include <nyx/string.h>
+#include <nyx/types.h>
 
+#include <asi/cpu.h>
 #include <asi/page.h>
 #include <asi/proc.h>
+#include <asi/traps.h>
 
 extern void proc_trampoline();
 

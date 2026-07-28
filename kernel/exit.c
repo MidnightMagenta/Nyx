@@ -1,18 +1,22 @@
 #include <mm/physmem.h>
 #include <mm/vmspace.h>
+#include <nyx/atomic.h>
 #include <nyx/compiler.h>
-#include <nyx/current.h>
 #include <nyx/errno.h>
 #include <nyx/list.h>
 #include <nyx/panic.h>
-#include <nyx/percpu.h>
 #include <nyx/printk.h>
 #include <nyx/proc.h>
+#include <nyx/refcount.h>
 #include <nyx/sched.h>
+#include <nyx/stddef.h>
 #include <nyx/syscall.h>
+#include <nyx/types.h>
 #include <nyx/vfs.h>
 #include <nyx/wait.h>
+#include <uapi/posix_types.h>
 
+#include <asi/address.h>
 #include <asi/bug.h>
 #include <asi/system.h>
 

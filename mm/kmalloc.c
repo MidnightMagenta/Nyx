@@ -7,7 +7,6 @@
 #include <nyx/minmax.h>
 #include <nyx/string.h>
 
-#include <asi/address.h>
 #include <asi/bitops.h>
 #include <asi/page.h>
 

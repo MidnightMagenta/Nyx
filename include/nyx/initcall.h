@@ -1,7 +1,6 @@
 #ifndef _NYX_INITCALL_H
 #define _NYX_INITCALL_H
 
-#include <nyx/compiler.h>
 #include <nyx/linkage.h>
 
 typedef void (*initfn_t)();

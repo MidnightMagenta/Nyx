@@ -1,6 +1,8 @@
 #include <nyx/initcall.h>
-#include <nyx/linkage.h>
+#include <nyx/stddef.h>
+#include <nyx/uio.h>
 #include <nyx/vfs.h>
+#include <uapi/posix_types.h>
 
 #define ZERO_RDEV makedev(1, 5)
 

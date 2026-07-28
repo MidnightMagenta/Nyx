@@ -16,6 +16,8 @@
 #include <asi/bug.h>
 #include <asi/page.h>
 
+struct kmem_cache_s;
+
 #define pr_fmt(fmt) "slab: " fmt "\n"
 
 #define SLAB_MAX_SMALL_OBJECT (PAGE_SIZE / 8)

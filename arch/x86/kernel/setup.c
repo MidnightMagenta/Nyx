@@ -1,12 +1,11 @@
 #include <mm/memblock.h>
 #include <mm/memory.h>
+#include <mm/mm_types.h>
 #include <mm/mmzone.h>
-#include <mm/physmem.h>
 #include <mm/virtmem.h>
 #include <nyx/align.h>
 #include <nyx/linkage.h>
 #include <nyx/panic.h>
-#include <nyx/percpu.h>
 #include <nyx/proc.h>
 #include <nyx/types.h>
 
@@ -14,9 +13,7 @@
 #include <asi/link_symbols.h>
 #include <asi/memory.h>
 #include <asi/mmap.h>
-#include <asi/msr.h>
 #include <asi/page.h>
-#include <asi/page_data.h>
 #include <asi/setupdata.h>
 
 extern void idt_setup_interrupts();

@@ -1,14 +1,12 @@
 #include <nyx/current.h>
 #include <nyx/errno.h>
-#include <nyx/kernel.h>
-#include <nyx/printk.h>
 #include <nyx/syscall.h>
 #include <nyx/types.h>
 
-#include <asi/bug.h>
 #include <asi/cpu.h>
 #include <asi/gdt.h>
 #include <asi/msr.h>
+#include <asi/traps.h>
 
 extern void syscall_entry();
 

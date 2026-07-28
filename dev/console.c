@@ -1,7 +1,9 @@
 #include <nyx/early_serial.h>
 #include <nyx/initcall.h>
-#include <nyx/linkage.h>
+#include <nyx/stddef.h>
+#include <nyx/uio.h>
 #include <nyx/vfs.h>
+#include <uapi/posix_types.h>
 
 #define CONSOLE_RDEV makedev(5, 1)
 
@@ -25,7 +27,8 @@ static int console_read(dev_t d, struct uio *u) {
     (void) d;
     (void) u;
     return 0;
-} /* no kbd yet */
+}
+
 static const struct cdevsw console_cdevsw = {
         .d_name  = "console",
         .d_open  = cdev_noop,

@@ -1,9 +1,9 @@
 #include <mm/mm_types.h>
 #include <nyx/atomic.h>
 #include <nyx/list.h>
-#include <nyx/percpu.h>
 #include <nyx/proc.h>
 #include <nyx/refcount.h>
+#include <nyx/stddef.h>
 #include <nyx/vfs.h>
 
 extern char init_stack_top[];

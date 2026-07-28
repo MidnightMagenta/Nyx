@@ -1,5 +1,6 @@
 #include <asi/page.h>
 #include <asi/tss.h>
+#include <nyx/types.h>
 
 char ist1[PAGE_SIZE];
 

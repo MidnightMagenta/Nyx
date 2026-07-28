@@ -1,5 +1,10 @@
+#include <nyx/kernel.h>
+#include <nyx/stddef.h>
 #include <nyx/syscall.h>
+#include <nyx/types.h>
 #include <uapi/syscall.h>
+
+struct thread;
 
 #define EXTERN_SYSCALL(name) extern int name(struct thread *, struct syscall_args *, register_t *)
 

@@ -3,6 +3,8 @@
 #include <nyx/list.h>
 #include <nyx/proc.h>
 #include <nyx/sched.h>
+#include <nyx/stddef.h>
+#include <nyx/types.h>
 
 #include <asi/bug.h>
 #include <asi/irq.h>

@@ -4,13 +4,19 @@
 #include <mm/mm_types.h>
 #include <nyx/errno.h>
 #include <nyx/fcntl.h>
+#include <nyx/kernel.h>
 #include <nyx/linkage.h>
+#include <nyx/list.h>
 #include <nyx/stddef.h>
 #include <nyx/string.h>
 #include <nyx/types.h>
+#include <nyx/uio.h>
 #include <nyx/vfs.h>
+#include <uapi/posix_types.h>
 
 #include <asi/bug.h>
+
+struct statfs;
 
 struct cpio_node {
     struct fsnode c_node;

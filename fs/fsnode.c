@@ -2,10 +2,12 @@
 #include <mm/kmalloc.h>
 #include <mm/mm_types.h>
 #include <nyx/errno.h>
-#include <nyx/stddef.h>
+#include <nyx/list.h>
 #include <nyx/string.h>
 #include <nyx/types.h>
+#include <nyx/uio.h>
 #include <nyx/vfs.h>
+#include <uapi/posix_types.h>
 
 static inline size_t align8(size_t x) {
     return (x + 7) & ~(size_t) 7;

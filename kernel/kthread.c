@@ -1,9 +1,6 @@
-#include <nyx/errno.h>
 #include <nyx/kthread.h>
 #include <nyx/proc.h>
-#include <nyx/sched.h>
 #include <nyx/string.h>
-#include <nyx/types.h>
 
 #include <asi/bug.h>
 

@@ -1,14 +1,16 @@
+#include <mm/mm_types.h>
 #include <mm/physmem.h>
 #include <mm/vmspace.h>
 #include <nyx/atomic.h>
-#include <nyx/current.h>
 #include <nyx/errno.h>
 #include <nyx/list.h>
+#include <nyx/printk.h>
 #include <nyx/proc.h>
+#include <nyx/refcount.h>
 #include <nyx/sched.h>
 #include <nyx/string.h>
-#include <nyx/syscall.h>
-#include <uapi/posix_types.h>
+#include <nyx/types.h>
+#include <nyx/vfs.h>
 
 #include <asi/address.h>
 
@@ -17,6 +19,8 @@
 #else
 #define pr_wait_debug(fmt, ...) /* void */
 #endif
+
+struct syscall_args;
 
 extern void arch_fork(struct thread *t1, struct thread *t2, void (*func)(void *), void *arg);
 extern void child_return(void *arg);

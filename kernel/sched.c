@@ -1,20 +1,17 @@
-#include <mm/physmem.h>
-#include <mm/slab.h>
-#include <nyx/bitmap.h>
-#include <nyx/compiler.h>
 #include <nyx/current.h>
-#include <nyx/kernel.h>
 #include <nyx/linkage.h>
 #include <nyx/list.h>
+#include <nyx/percpu.h>
 #include <nyx/proc.h>
 #include <nyx/sched.h>
+#include <nyx/sched_percpu.h>
 #include <nyx/string.h>
 #include <nyx/types.h>
-#include <uapi/posix_types.h>
 
-#include <asi/address.h>
 #include <asi/bug.h>
+#include <asi/cpu.h>
 #include <asi/irq.h>
+#include <asi/page.h>
 
 extern struct thread *context_switch(struct thread *prev, struct thread *next);
 
@@ -52,8 +49,6 @@ void schedule_tail(struct thread *prev, struct thread *next) {
     get_pcpu()->rsp0 = (u64) next->kstack + PAGE_SIZE;
     if (prev->state == TS_ZOMBIE) { exit_tail(prev); }
 }
-
-#include <asi/msr.h>
 
 void schedule() {
     struct sched_percpu *schedc = &get_pcpu()->scheds;

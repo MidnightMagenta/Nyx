@@ -1,4 +1,5 @@
 #include <mm/kmalloc.h>
+#include <mm/mm_types.h>
 #include <mm/vmspace.h>
 #include <nyx/errno.h>
 #include <nyx/proc.h>

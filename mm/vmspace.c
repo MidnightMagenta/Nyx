@@ -1,18 +1,20 @@
-#include <mm/address.h>
+#include <mm/mm_types.h>
 #include <mm/physmem.h>
 #include <mm/slab.h>
 #include <mm/virtmem.h>
 #include <mm/vmspace.h>
 #include <nyx/errno.h>
+#include <nyx/list.h>
 #include <nyx/minmax.h>
+#include <nyx/proc.h>
+#include <nyx/refcount.h>
 #include <nyx/string.h>
+#include <nyx/types.h>
 
-#include <asi/bug.h>
+#include <asi/address.h>
 #include <asi/page.h>
 
-#include <nyx/printk.h>
-
-#define pr_fmt(fmt) "vas: " fmt
+#define pr_fmt(fmt) "vmspace: " fmt
 
 kmem_cache_t *vmspace_cache;
 

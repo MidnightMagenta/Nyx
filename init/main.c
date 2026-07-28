@@ -1,21 +1,25 @@
 #include <fs/cpio.h>
 #include <mm/mm_types.h>
 #include <mm/vmspace.h>
+#include <nyx/compiler.h>
 #include <nyx/current.h>
 #include <nyx/fcntl.h>
 #include <nyx/kernel.h>
 #include <nyx/kthread.h>
 #include <nyx/linkage.h>
 #include <nyx/panic.h>
-#include <nyx/sched.h>
-#include <nyx/stddef.h>
+#include <nyx/printk.h>
+#include <nyx/proc.h>
 #include <nyx/string.h>
+#include <nyx/types.h>
+#include <nyx/uio.h>
 #include <nyx/vfs.h>
-#include <nyx/wait.h>
 
+#include <asi/address.h>
 #include <asi/bootparam.h>
 #include <asi/bug.h>
 #include <asi/irq.h>
+#include <asi/traps.h>
 
 #ifdef CONFIG_KERNEL_TESTS
 extern void __do_kernel_tests();
@@ -101,7 +105,7 @@ void __init start_kernel() {
         printk("namei failed :(\n");
     }
 
-    char buf[256];
+    static char buf[256];
     memset(buf, 0, 256);
 
     vn_rdwr(UIO_READ, nd.ni_vp, buf, 255, 0, NULL);
@@ -155,7 +159,7 @@ void fudge_exec() {
     vmspace_put(oldmm);
 }
 
-void init_proc(void *arg) {
+void __init init_proc(void *arg) {
     (void) arg;
     fudge_exec();
     return;

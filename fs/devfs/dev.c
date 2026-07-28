@@ -2,13 +2,17 @@
 #include <mm/kmalloc.h>
 #include <mm/mm_types.h>
 #include <nyx/errno.h>
-#include <nyx/fcntl.h>
 #include <nyx/kernel.h>
 #include <nyx/linkage.h>
 #include <nyx/string.h>
+#include <nyx/types.h>
+#include <nyx/uio.h>
 #include <nyx/vfs.h>
+#include <uapi/posix_types.h>
 
 #include <asi/bug.h>
+
+struct statfs;
 
 struct dev_node {
     struct fsnode        d_node;

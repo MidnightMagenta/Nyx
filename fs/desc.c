@@ -1,11 +1,16 @@
 #include <mm/kmalloc.h>
+#include <mm/mm_types.h>
 #include <nyx/errno.h>
 #include <nyx/fcntl.h>
 #include <nyx/proc.h>
+#include <nyx/refcount.h>
 #include <nyx/spinlock.h>
 #include <nyx/string.h>
 #include <nyx/syscall.h>
+#include <nyx/types.h>
+#include <nyx/uio.h>
 #include <nyx/vfs.h>
+#include <uapi/posix_types.h>
 
 #include <asi/bug.h>
 

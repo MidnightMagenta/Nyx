@@ -1,7 +1,6 @@
 #ifndef _BOOT_UTILS_H
 #define _BOOT_UTILS_H
 
-#include "printb.h"
 #include <nyx/stddef.h>
 
 #define hcf()                                                                                                          \

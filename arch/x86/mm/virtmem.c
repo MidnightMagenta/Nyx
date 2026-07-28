@@ -5,12 +5,13 @@
 #include <nyx/errno.h>
 #include <nyx/panic.h>
 #include <nyx/refcount.h>
-#include <nyx/stddef.h>
 #include <nyx/string.h>
 #include <nyx/types.h>
 
+#include <asi/address.h>
 #include <asi/bitops.h>
 #include <asi/bug.h>
+#include <asi/memory.h>
 #include <asi/page.h>
 #include <asi/page_data.h>
 #include <asi/system.h>

@@ -1,4 +1,3 @@
-#include <nyx/stddef.h>
 #include <nyx/string.h>
 
 char *strcpy(char *restrict dest, const char *restrict src) {

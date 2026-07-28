@@ -1,14 +1,16 @@
 #include <mm/kmalloc.h>
+#include <mm/mm_types.h>
 #include <mm/slab.h>
-#include <mm/vmspace.h>
 #include <nyx/errno.h>
 #include <nyx/linkage.h>
 #include <nyx/list.h>
+#include <nyx/refcount.h>
 #include <nyx/string.h>
-#include <nyx/uio.h>
 #include <nyx/vfs.h>
 
 #include <asi/bug.h>
+
+struct uio;
 
 struct vnode *rootvnode;
 LIST_HEAD(mountlist);

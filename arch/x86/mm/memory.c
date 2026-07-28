@@ -1,4 +1,3 @@
-#include <mm/address.h>
 #include <mm/memblock.h>
 #include <mm/memory.h>
 #include <mm/mm_types.h>
@@ -13,7 +12,7 @@
 #include <nyx/string.h>
 #include <nyx/types.h>
 
-#include <asi/memory.h>
+#include <asi/address.h>
 #include <asi/mmap.h>
 #include <asi/page.h>
 #include <asi/setupdata.h>

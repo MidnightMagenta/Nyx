@@ -30,6 +30,9 @@
   { include: ["<wchar.h>",    "public", "<nyx/wchar.h>",    "public"] },
   { include: ["<wctype.h>",   "public", "<nyx/wctype.h>",   "public"] },
   { include: ["<sys/types.h>", "public", "<uapi/posix_types.h>", "public"] },
-  { include: ["<uapi/asi-generic/errno-base.h>", "public", "<nyx/errno.h>", "public"] },
+  { include: ["<sys/uio.h>", "public", "<nyx/uio.h>", "public"] },
+  { include: ["\"asi-generic/limits.h\"", "private", "<nyx/limits.h>", "public"] },
+  { include: ["\"uapi/asi-generic/errno-base.h\"", "private", "<nyx/errno.h>", "public"] },
+  { include: ["\"asi-generic/types.h\"", "private", "<nyx/types.h>", "public"] },
 ]
 

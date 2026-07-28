@@ -1,6 +1,8 @@
 #include <nyx/initcall.h>
-#include <nyx/linkage.h>
 #include <nyx/vfs.h>
+#include <uapi/posix_types.h>
+
+struct uio;
 
 #define NULL_RDEV makedev(1, 3)
 

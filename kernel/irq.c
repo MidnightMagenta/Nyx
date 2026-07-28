@@ -1,4 +1,4 @@
-#include <mm/physmem.h>
+#include <mm/mm_types.h>
 #include <mm/slab.h>
 #include <nyx/errno.h>
 #include <nyx/irq.h>

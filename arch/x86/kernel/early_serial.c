@@ -1,6 +1,6 @@
-#include <asi/errno.h>
 #include <asi/io.h>
 #include <nyx/early_serial.h>
+#include <nyx/errno.h>
 #include <nyx/linkage.h>
 #include <nyx/string.h>
 #include <nyx/types.h>

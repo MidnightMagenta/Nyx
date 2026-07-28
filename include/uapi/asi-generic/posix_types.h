@@ -3,5 +3,6 @@
 
 typedef signed int       __pid_t;
 typedef signed long long __off_t;
+typedef unsigned int     __dev_t;
 
 #endif
