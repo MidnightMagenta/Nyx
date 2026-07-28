@@ -89,7 +89,7 @@ void __init start_kernel() {
     do_initcalls();
 
     struct nameidata nd;
-    nd.ni_dirp   = "/../../test/path/a/../a/././..///../path/a//testfile.txt";
+    nd.ni_dirp   = "/../../test/path/a/../a/././..///../path/a//../../../testfile.txt";
     nd.ni_segflg = UIO_SYSSPACE;
     nd.ni_op     = NAMEI_LOOKUP;
     nd.ni_flags  = 0;

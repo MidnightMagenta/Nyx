@@ -14,7 +14,7 @@ cat >tmp/initcpio/test/path/a/testfile.txt <<EOF
 Welcome kernel.
 This data was written from a file.
 To prove it, here's a magic value:
-6202145682195251
+9615286509186122
 EOF
 
 mkdir -p tmp/initcpio/dev

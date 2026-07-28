@@ -2,15 +2,15 @@ bits 64
 
 org 0x10000
 section .text
-    mov     rax, 57
+    mov     rax, 5
     syscall
     cmp     rax, 0
     jnz     .Wait
-    mov     rax, 60
+    mov     rax, 7
     mov     rdi, 0
     syscall
 .Wait:
-    mov rax, 61
+    mov rax, 8
     mov rdi, 0xFFFFFFFF
     mov rsi, 0
     mov rdx, 0
@@ -52,5 +52,4 @@ msg db "test message :)", 0x0A
 len_msg equ $-msg
 
 testfile_path db "/test/path/a/testfile.txt"
-
 buf times 256 db 0
