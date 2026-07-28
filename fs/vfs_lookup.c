@@ -165,7 +165,7 @@ int namei(struct nameidata *ndp) {
 
     if (ndp->ni_segflg == UIO_USERSPACE) {
         size_t done;
-        err = copyinstr(buf, ndp->ni_dirp, sizeof(buf), &done);
+        err = copyinstr(buf, ndp->ni_dirp, MAXPATH, &done);
         if (err) { goto fail0; }
     } else {
         if (strlcpy(buf, ndp->ni_dirp, MAXPATH) >= MAXPATH) {
