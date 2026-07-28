@@ -14,9 +14,9 @@ struct thread   proc0;
 struct process  proc0_proc;
 
 void proc0_init() {
-    __proc0_vmspace.pgd = NULL;
-    refcount_init(&__proc0_vmspace.refcount, 1);
-    list_init(&__proc0_vmspace.vma_regions);
+    __proc0_vmspace.v_pgd = NULL;
+    refcount_init(&__proc0_vmspace.v_refcount, 1);
+    list_init(&__proc0_vmspace.v_vmmap);
 
     atomic_store_explicit(&proc0.flags, 0, ATOMIC_RELAXED);
     proc0.state  = TS_RUNNING;

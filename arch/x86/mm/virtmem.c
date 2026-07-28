@@ -97,19 +97,19 @@
 static inline int inc_pgtable_refcount(pgd_t *pgd) {
     struct page *page = virt_to_page(pgd);
     BUG_ON(!PagePgtable(page));
-    return refcount_get_inc(&page->refcnt_private);
+    return refcount_get_inc(&page->pg_refcnt_private);
 }
 
 static inline int dec_pgtable_refcount(pgd_t *pgd) {
     struct page *page = virt_to_page(pgd);
     BUG_ON(!PagePgtable(page));
-    return refcount_get_dec(&page->refcnt_private);
+    return refcount_get_dec(&page->pg_refcnt_private);
 }
 
 static inline int is_pgtable_empty(pgd_t *pgd) {
     struct page *page = virt_to_page(pgd);
     BUG_ON(!PagePgtable(page));
-    return !refcount_get(&page->refcnt_private);
+    return !refcount_get(&page->pg_refcnt_private);
 }
 
 pgd_t *vm_get_page_table(int gfp_flags) {
@@ -119,7 +119,7 @@ pgd_t *vm_get_page_table(int gfp_flags) {
 
     page = phys_to_page(phys);
     SetPagePgtable(page);
-    refcount_init(&page->refcnt_private, 0);
+    refcount_init(&page->pg_refcnt_private, 0);
 
     return __va(phys);
 }
@@ -258,8 +258,8 @@ static int vm_arch_map(pgd_t      *pgd,
                 pg = phys_to_page(phys);
                 BUG_ON(PageBuddy(pg));
                 BUG_ON(!PageHead(pg));
-                BUG_ON(pg->head_order != ilog2(__PAGE_2M_PGCNT));
-                refcount_inc(&pg->refcnt);
+                BUG_ON(pg->pg_head_order != ilog2(__PAGE_2M_PGCNT));
+                refcount_inc(&pg->pg_refcnt);
             }
 
             pg_cnt -= __PAGE_2M_SIZE >> PAGE_SHIFT;
@@ -273,8 +273,8 @@ static int vm_arch_map(pgd_t      *pgd,
             pg = phys_to_page(phys);
             BUG_ON(PageBuddy(pg));
             BUG_ON(!PageHead(pg));
-            BUG_ON(pg->head_order != ilog2(__PAGE_4K_PGCNT));
-            refcount_inc(&pg->refcnt);
+            BUG_ON(pg->pg_head_order != ilog2(__PAGE_4K_PGCNT));
+            refcount_inc(&pg->pg_refcnt);
         }
 
         if ((res = map_4k_page(pgd, phys, virt, flags, gfp_flags))) { return res; }
@@ -319,7 +319,7 @@ static inline bool try_free_table(pgd_t *table, pgd_t *parent_entry, pgd_t *pare
 static inline void unmap_leaf(pgd_t *entry, virt_addr_t virt, struct page *pg, size_t order) {
     *entry = 0;
     invlpg(virt);
-    if (refcount_get_dec(&pg->refcnt) == 1) { __pm_free_pages(pg, order); }
+    if (refcount_get_dec(&pg->pg_refcnt) == 1) { __pm_free_pages(pg, order); }
 }
 
 static void vm_arch_umap(pgd_t *pgd, virt_addr_t virt, size_t pg_cnt) {

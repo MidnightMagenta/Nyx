@@ -74,8 +74,8 @@ static void __init init_zone_memmap(zone_t *zone, int zone_type) {
     for (idx = 0; idx < zone->spanned_pages; ++idx) {
         page = &zone->zone_mem_map[idx];
         SetPageReserved(page);
-        page->zone_id = zone_type;
-        page->list    = (struct list_head) LIST_HEAD_INIT(page->list);
+        page->pg_zone_id = zone_type;
+        page->pg_list    = (struct list_head) LIST_HEAD_INIT(page->pg_list);
     }
 
     idx = 0;

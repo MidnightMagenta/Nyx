@@ -25,7 +25,7 @@ void __init init_page_alloc() { /* void */ }
 
 static inline int page_is_buddy(struct page *page, unsigned long order) {
     if (!PageBuddy(page)) { return 0; }
-    return page->private == order;
+    return page->pg_private == order;
 }
 
 static struct page *__rm_block(zone_t *zone, unsigned long order) {
@@ -41,10 +41,10 @@ static struct page *__rm_block(zone_t *zone, unsigned long order) {
     return NULL;
 
 block_found:
-    page = list_first_entry(&area->list[0], struct page, list);
-    list_del(&page->list);
+    page = list_first_entry(&area->list[0], struct page, pg_list);
+    list_del(&page->pg_list);
     ClearPageBuddy(page);
-    page->private = 0;
+    page->pg_private = 0;
     area->free_count--;
 
     size = 1ul << cur_order;
@@ -53,10 +53,10 @@ block_found:
         area = &zone->free_area[cur_order];
         size >>= 1;
         buddy = page + size;
-        list_add(&buddy->list, &area->list[0]);
+        list_add(&buddy->pg_list, &area->list[0]);
         area->free_count++;
         SetPageBuddy(buddy);
-        buddy->private = cur_order;
+        buddy->pg_private = cur_order;
     }
 
     zone->free_pages -= 1ul << order;
@@ -77,7 +77,7 @@ static void __add_block(struct page *page, zone_t *zone, unsigned long order) {
 
         if (!page_is_buddy(buddy, order)) { break; }
 
-        list_del(&buddy->list);
+        list_del(&buddy->pg_list);
         ClearPageBuddy(buddy);
 
         zone->free_area[order].free_count--;
@@ -87,9 +87,9 @@ static void __add_block(struct page *page, zone_t *zone, unsigned long order) {
         order++;
     }
 
-    list_add(&page->list, &zone->free_area[order].list[0]);
+    list_add(&page->pg_list, &zone->free_area[order].list[0]);
     SetPageBuddy(page);
-    page->private = order;
+    page->pg_private = order;
     zone->free_area[order].free_count++;
 }
 
@@ -145,7 +145,7 @@ found_page:
     }
 
     SetPageHead(page);
-    page->head_order = order;
+    page->pg_head_order = order;
 
     return page;
 }
@@ -173,7 +173,7 @@ void __pm_free_pages(struct page *page, unsigned long order) {
 #endif
     physmem_pr_dev("freeing block at %#p at order %d\n", page_to_phys(page), order);
     ClearPageHead(page);
-    zone_t *zone = &pgdata->zones[page->zone_id];
+    zone_t *zone = &pgdata->zones[page->pg_zone_id];
     __add_block(page, zone, order);
 }
 

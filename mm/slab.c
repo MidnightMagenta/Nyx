@@ -132,8 +132,8 @@ static void slab_map_pages(struct kmem_cache_s *cache, struct kmem_slab_s *slab,
     nr_pages = (1 << cache->gfp_order);
 
     do {
-        page->kmem_cache = cache;
-        page->kmem_slab  = slab;
+        page->pg_kmem_cache = cache;
+        page->pg_kmem_slab  = slab;
         page++;
     } while (nr_pages--);
 }
@@ -387,8 +387,8 @@ void kmem_cache_free(kmem_cache_t *cache, void *obj) {
     page = virt_to_page(obj);
 
     if (!PageSlab(page)) { return; }
-    if (page->kmem_cache != cache) { return; }
-    slab = page->kmem_slab;
+    if (page->pg_kmem_cache != cache) { return; }
+    slab = page->pg_kmem_slab;
 
     if (slab->free == BUFCTL_END) {
         list_del(&slab->list);

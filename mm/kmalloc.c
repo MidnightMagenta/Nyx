@@ -52,10 +52,10 @@ void kfree(void *addr) {
 
     if (PageKmalloc(pg)) {
         ClearPageKmalloc(pg);
-        __pm_free_pages(pg, pg->head_order);
+        __pm_free_pages(pg, pg->pg_head_order);
         return;
     }
 
-    cache = pg->kmem_cache;
+    cache = pg->pg_kmem_cache;
     kmem_cache_free(cache, addr);
 }
