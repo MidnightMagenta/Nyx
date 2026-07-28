@@ -59,7 +59,7 @@ static void __init mount_devfs() {
             .ni_segflg = UIO_SYSSPACE,
             .ni_op     = NAMEI_LOOKUP,
             .ni_flags  = 0,
-            .ni_proc   = current()->proc,
+            .ni_proc   = current()->t_proc,
     };
 
     BUG_ON(namei(&nd));
@@ -71,11 +71,11 @@ static __init void start_init() {
     if (do_fork(&proc0, FORK_NOZOMBIE | FORK_SHAREVM, &init_proc, NULL, NULL, &initproc) != 0) {
         panic("failed to start init");
     }
-    strncpy(initproc->proc->name, "init", PROC_NAME_LEN);
+    strncpy(initproc->t_proc->p_name, "init", PROC_NAME_LEN);
 
-    BUG_ON(vfs_open(initproc->proc, "/dev/console", UIO_SYSSPACE, O_RDWR, 0, &stdinfd));
-    BUG_ON(kern_dup(initproc->proc, stdinfd, &stdoutfd));
-    BUG_ON(kern_dup(initproc->proc, stdinfd, &stderrfd));
+    BUG_ON(vfs_open(initproc->t_proc, "/dev/console", UIO_SYSSPACE, O_RDWR, 0, &stdinfd));
+    BUG_ON(kern_dup(initproc->t_proc, stdinfd, &stdoutfd));
+    BUG_ON(kern_dup(initproc->t_proc, stdinfd, &stderrfd));
     BUG_ON(stdinfd != 0 || stdoutfd != 1 || stderrfd != 2);
 }
 
@@ -97,7 +97,7 @@ void __init start_kernel() {
     nd.ni_segflg = UIO_SYSSPACE;
     nd.ni_op     = NAMEI_LOOKUP;
     nd.ni_flags  = 0;
-    nd.ni_proc   = current()->proc;
+    nd.ni_proc   = current()->t_proc;
 
     if (!namei(&nd)) {
         printk("Found vnode: %#p\n", nd.ni_vp);
@@ -131,7 +131,7 @@ void __init start_kernel() {
 
 void fudge_exec() {
     struct thread  *t  = current();
-    struct process *pr = t->proc;
+    struct process *pr = t->t_proc;
     struct vmspace *mm = vmspace_new(pr);
     struct vmspace *oldmm;
     flags_t         flags;
@@ -149,11 +149,11 @@ void fudge_exec() {
                     VM_EXEC | VM_READ | VM_WRITE | VM_USER,
                     M_SLEEPOK);
 
-    oldmm = pr->mm;
+    oldmm = pr->p_mm;
 
     flags = arch_irq_save();
     vmspace_activate(mm);
-    pr->mm = mm;
+    pr->p_mm = mm;
     arch_irq_restore(flags);
 
     vmspace_put(oldmm);

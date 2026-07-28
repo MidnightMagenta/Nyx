@@ -26,7 +26,7 @@ void vmspace_init() {
 struct vmspace *vmspace_fork(struct process *p) {
     struct vmspace *newvm = vmspace_new(p);
     if (!newvm) { return NULL; }
-    if (vm_copy_user(newvm->v_pgd, p->mm->v_pgd, M_SLEEPOK) != 0) { goto fail0; }
+    if (vm_copy_user(newvm->v_pgd, p->p_mm->v_pgd, M_SLEEPOK) != 0) { goto fail0; }
 
     return newvm;
 
@@ -36,8 +36,8 @@ fail0:
 }
 
 struct vmspace *vmspace_share(struct process *parent) {
-    refcount_inc(&parent->mm->v_refcount);
-    return parent->mm;
+    refcount_inc(&parent->p_mm->v_refcount);
+    return parent->p_mm;
 }
 
 struct vmspace *vmspace_new(struct process *parent) {
@@ -49,7 +49,7 @@ struct vmspace *vmspace_new(struct process *parent) {
     newvm->v_pgd = vm_get_page_table(M_SLEEPOK);
     if (!newvm->v_pgd) { goto fail0; }
 
-    if (vm_copy_kernel(newvm->v_pgd, parent->mm->v_pgd)) { goto fail1; }
+    if (vm_copy_kernel(newvm->v_pgd, parent->p_mm->v_pgd)) { goto fail1; }
 
     return newvm;
 

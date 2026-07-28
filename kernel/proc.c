@@ -28,16 +28,16 @@ struct thread *alloc_thread(int gfp_flags) {
 }
 
 void free_proc(struct process *pr) {
-    put_pid(pr->pid);
-    list_del(&pr->siblings);
-    list_del(&pr->gproc_node);
+    put_pid(pr->p_pid);
+    list_del(&pr->p_siblings);
+    list_del(&pr->p_gproc_node);
     kmem_cache_free(proc_struct_cache, pr);
 }
 
 void free_thread(struct thread *thrd) {
-    put_tid(thrd->tid);
-    list_del(&thrd->thrd_node);
-    list_del(&thrd->gthrd_node);
+    put_tid(thrd->t_tid);
+    list_del(&thrd->t_thrd_node);
+    list_del(&thrd->t_gthrd_node);
     kmem_cache_free(thread_struct_cache, thrd);
 }
 

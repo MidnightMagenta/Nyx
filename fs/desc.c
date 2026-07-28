@@ -56,7 +56,7 @@ int fdinit(struct process *p) {
         fdp->fd_rdir = rootvnode;
     }
 
-    p->fd = fdp;
+    p->p_fd = fdp;
     return 0;
 }
 
@@ -93,7 +93,7 @@ struct filedesc *fdcopy(struct filedesc *src) {
 }
 
 void fdfree(struct process *p) {
-    struct filedesc *fdp = p->fd;
+    struct filedesc *fdp = p->p_fd;
     if (!fdp) return;
     for (int fd = 0; fd < fdp->fd_nfiles; fd++) {
         if (fdp->fd_files[fd].fe_file) { fdrop(fdp->fd_files[fd].fe_file); }
@@ -104,11 +104,11 @@ void fdfree(struct process *p) {
     kfree(fdp->fd_files);
     kfree(fdp);
 
-    p->fd = NULL;
+    p->p_fd = NULL;
 }
 
 int fdalloc(struct process *p, int min, int *fdout) {
-    struct filedesc *fdp = p->fd;
+    struct filedesc *fdp = p->p_fd;
 
     for (int fd = min; fd < fdp->fd_nfiles; fd++) {
         if (fdp->fd_files[fd].fe_file == NULL) {
@@ -135,8 +135,8 @@ int falloc(struct process *p, struct file **fpout, int *fdout) {
     memset(fp, 0, sizeof(*fp));
     refcount_set(&fp->f_count, 1);
 
-    p->fd->fd_files[fd].fe_file  = fp;
-    p->fd->fd_files[fd].fe_flags = 0;
+    p->p_fd->fd_files[fd].fe_file  = fp;
+    p->p_fd->fd_files[fd].fe_flags = 0;
 
     *fpout = fp;
     *fdout = fd;
@@ -145,7 +145,7 @@ int falloc(struct process *p, struct file **fpout, int *fdout) {
 }
 
 struct file *fget(struct process *p, int fd) {
-    struct filedesc *fdp = p->fd;
+    struct filedesc *fdp = p->p_fd;
     struct file     *fp;
 
     if (fd < 0 || fd >= fdp->fd_nfiles) { return NULL; }
@@ -167,7 +167,7 @@ void fdrop(struct file *fp) {
 }
 
 int fd_close(struct process *p, int fd) {
-    struct filedesc *fdp = p->fd;
+    struct filedesc *fdp = p->p_fd;
     struct file     *fp;
 
     if (fd < 0 || fd >= fdp->fd_nfiles) { return EBADF; }
@@ -299,7 +299,7 @@ int vfs_open(struct process *p, const char *path, enum uio_seg seg, int flags, u
     fp->f_data   = nd.ni_vp;
     fp->f_offset = 0;
     fp->f_flags  = flags;
-    if (flags & O_CLOEXEC) { p->fd->fd_files[fd].fe_flags |= FD_CLOEXEC; }
+    if (flags & O_CLOEXEC) { p->p_fd->fd_files[fd].fe_flags |= FD_CLOEXEC; }
 
     *fdout = fd;
     return 0;
@@ -369,29 +369,29 @@ int kern_dup(struct process *p, int oldfd, int *newfd) {
         return error;
     }
 
-    p->fd->fd_files[fd].fe_file  = fp;
-    p->fd->fd_files[fd].fe_flags = 0;
-    *newfd                       = fd;
+    p->p_fd->fd_files[fd].fe_file  = fp;
+    p->p_fd->fd_files[fd].fe_flags = 0;
+    *newfd                         = fd;
     return 0;
 }
 
 int sys_open(struct thread *t, struct syscall_args *args, register_t *retval) {
-    return kern_open(t->proc, (const char *) args->arg1, (int) args->arg2, 0, (int *) retval);
+    return kern_open(t->t_proc, (const char *) args->arg1, (int) args->arg2, 0, (int *) retval);
 }
 
 int sys_close(struct thread *t, struct syscall_args *args, register_t *retval) {
     (void) retval;
-    return kern_close(t->proc, (int) args->arg1);
+    return kern_close(t->t_proc, (int) args->arg1);
 }
 
 int sys_read(struct thread *t, struct syscall_args *args, register_t *retval) {
-    return kern_read(t->proc, (int) args->arg1, (const void *) args->arg2, (size_t) args->arg3, (ssize_t *) retval);
+    return kern_read(t->t_proc, (int) args->arg1, (const void *) args->arg2, (size_t) args->arg3, (ssize_t *) retval);
 }
 
 int sys_write(struct thread *t, struct syscall_args *args, register_t *retval) {
-    return kern_write(t->proc, (int) args->arg1, (const void *) args->arg2, (size_t) args->arg3, (ssize_t *) retval);
+    return kern_write(t->t_proc, (int) args->arg1, (const void *) args->arg2, (size_t) args->arg3, (ssize_t *) retval);
 }
 
 int sys_dup(struct thread *t, struct syscall_args *args, register_t *retval) {
-    return kern_dup(t->proc, (int) args->arg1, (int *) retval);
+    return kern_dup(t->t_proc, (int) args->arg1, (int *) retval);
 }

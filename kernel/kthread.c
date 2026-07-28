@@ -12,7 +12,7 @@ int kthread_create(void (*entry)(void *), void *arg, const char *name) {
 
     if ((res = do_fork(&proc0, FORK_NOZOMBIE | FORK_SHAREVM, entry, arg, NULL, &t))) { return res; }
 
-    strncpy(t->proc->name, name, PROC_NAME_LEN);
+    strncpy(t->t_proc->p_name, name, PROC_NAME_LEN);
     return 0;
 }
 

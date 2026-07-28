@@ -58,12 +58,12 @@ static int lookup(struct nameidata *ndp) {
     struct componentname *cnp  = &ndp->ni_cnd;
     const char           *path = ndp->ni_pathbuf;
     struct vnode         *dvp;
-    struct vnode         *rootdir = ndp->ni_proc->fd->fd_rdir ? ndp->ni_proc->fd->fd_rdir : rootvnode;
+    struct vnode         *rootdir = ndp->ni_proc->p_fd->fd_rdir ? ndp->ni_proc->p_fd->fd_rdir : rootvnode;
 
     if (path[0] == '/') {
         dvp = rootdir;
     } else {
-        dvp = ndp->ni_proc->fd->fd_cdir;
+        dvp = ndp->ni_proc->p_fd->fd_cdir;
     }
     vref(dvp);
 

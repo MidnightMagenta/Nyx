@@ -6,5 +6,5 @@
 
 void arch_schedule_tail(struct thread *prev, struct thread *next) {
     (void) prev;
-    default_tss.rsp[0] = (u64) next->kstack + PAGE_SIZE;
+    default_tss.rsp[0] = (u64) next->t_kstack + PAGE_SIZE;
 }

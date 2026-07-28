@@ -16,9 +16,9 @@ struct process;
 struct thread;
 
 struct thread {
-    atomic_ulong_t flags;
+    atomic_ulong_t t_flags;
 
-    struct list_head qnode;
+    struct list_head t_qnode;
 
     enum thread_state {
         TS_NEW,
@@ -26,44 +26,44 @@ struct thread {
         TS_RUNNING,
         TS_SLEEPING,
         TS_ZOMBIE,
-    } state;
+    } t_state;
 
-    struct thread_context ctx;
-    void                 *kstack;
-    pid_t                 tid;
-    struct process       *proc;
-    const volatile void  *wchan;
-    const char           *wmesg;
-    struct cpu_info      *cpu;
+    struct thread_context t_ctx;
+    void                 *t_kstack;
+    pid_t                 t_tid;
+    struct process       *t_proc;
+    const volatile void  *t_wchan;
+    const char           *t_wmesg;
+    struct cpu_info      *t_cpu;
 
-    struct list_head thrd_node;
-    struct list_head gthrd_node;
+    struct list_head t_thrd_node;
+    struct list_head t_gthrd_node;
 };
 
 #define TF_EXITING (1 << 2)
 
 struct process {
-    atomic_ulong_t flags;
+    atomic_ulong_t p_flags;
 
     enum proc_state {
         PS_NEW,
         PS_NORMAL,
         PS_ZOMBIE,
-    } state;
+    } p_state;
 
-    struct vmspace  *mm;
-    pid_t            pid;
-    struct refcount  live_thrd_cnt;
-    struct list_head thrds_list;
-    struct process  *parent;
-    struct list_head children;
-    struct list_head siblings;
-    int              xstatus;
+    struct vmspace  *p_mm;
+    pid_t            p_pid;
+    struct refcount  p_live_thrd_cnt;
+    struct list_head p_thrds_list;
+    struct process  *p_parent;
+    struct list_head p_children;
+    struct list_head p_siblings;
+    int              p_xstatus;
 
-    struct filedesc *fd;
+    struct filedesc *p_fd;
 
-    struct list_head gproc_node;
-    char             name[PROC_NAME_LEN];
+    struct list_head p_gproc_node;
+    char             p_name[PROC_NAME_LEN];
 };
 
 #define PF_NOZOMBIE   (1 << 0)
@@ -77,11 +77,11 @@ extern struct thread    proc0;
 extern struct thread   *initproc;
 
 static inline void thread_set_state(struct thread *t, enum thread_state state) {
-    t->state = state;
+    t->t_state = state;
 }
 
 static inline void proc_set_state(struct process *p, enum proc_state state) {
-    p->state = state;
+    p->p_state = state;
 }
 
 struct process *alloc_proc(int gfp_flags);
@@ -115,7 +115,7 @@ void do_exit(struct thread *t, int code, int flags);
 int  do_wait(struct thread *t, pid_t pid, int *stat_loc, register_t *retval, int flags);
 
 static inline struct trap_frame *thread_trap_frame(struct thread *t) {
-    return (struct trap_frame *) ((char *) t->kstack + PAGE_SIZE) - 1;
+    return (struct trap_frame *) ((char *) t->t_kstack + PAGE_SIZE) - 1;
 }
 
 #endif

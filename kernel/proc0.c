@@ -18,32 +18,32 @@ void proc0_init() {
     refcount_init(&__proc0_vmspace.v_refcount, 1);
     list_init(&__proc0_vmspace.v_vmmap);
 
-    atomic_store_explicit(&proc0.flags, 0, ATOMIC_RELAXED);
-    proc0.state  = TS_RUNNING;
-    proc0.kstack = init_stack_top;
-    proc0.tid    = 0;
-    proc0.proc   = &proc0_proc;
-    proc0.wchan  = NULL;
+    atomic_store_explicit(&proc0.t_flags, 0, ATOMIC_RELAXED);
+    proc0.t_state  = TS_RUNNING;
+    proc0.t_kstack = init_stack_top;
+    proc0.t_tid    = 0;
+    proc0.t_proc   = &proc0_proc;
+    proc0.t_wchan  = NULL;
 
-    list_init(&proc0.qnode);
-    list_init(&proc0.thrd_node);
-    list_init(&proc0.gthrd_node);
-    list_add_tail(&proc0.gthrd_node, &thread_list);
+    list_init(&proc0.t_qnode);
+    list_init(&proc0.t_thrd_node);
+    list_init(&proc0.t_gthrd_node);
+    list_add_tail(&proc0.t_gthrd_node, &thread_list);
 
-    atomic_store_explicit(&proc0_proc.flags, 0, ATOMIC_RELAXED);
-    proc0_proc.state = PS_NORMAL;
-    proc0_proc.mm    = &__proc0_vmspace;
-    proc0_proc.pid   = 0;
-    refcount_init(&proc0_proc.live_thrd_cnt, 1);
-    proc0_proc.parent  = NULL;
-    proc0_proc.xstatus = 0;
+    atomic_store_explicit(&proc0_proc.p_flags, 0, ATOMIC_RELAXED);
+    proc0_proc.p_state = PS_NORMAL;
+    proc0_proc.p_mm    = &__proc0_vmspace;
+    proc0_proc.p_pid   = 0;
+    refcount_init(&proc0_proc.p_live_thrd_cnt, 1);
+    proc0_proc.p_parent  = NULL;
+    proc0_proc.p_xstatus = 0;
 
     fdinit(&proc0_proc);
 
-    list_init(&proc0_proc.thrds_list);
-    list_init(&proc0_proc.children);
-    list_init(&proc0_proc.siblings);
-    list_init(&proc0_proc.gproc_node);
-    list_add_tail(&proc0.thrd_node, &proc0_proc.thrds_list);
-    list_add_tail(&proc0_proc.gproc_node, &proc_list);
+    list_init(&proc0_proc.p_thrds_list);
+    list_init(&proc0_proc.p_children);
+    list_init(&proc0_proc.p_siblings);
+    list_init(&proc0_proc.p_gproc_node);
+    list_add_tail(&proc0.t_thrd_node, &proc0_proc.p_thrds_list);
+    list_add_tail(&proc0_proc.p_gproc_node, &proc_list);
 }

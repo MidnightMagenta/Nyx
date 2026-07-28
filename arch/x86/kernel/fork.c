@@ -10,10 +10,10 @@
 extern void proc_trampoline();
 
 void arch_fork(struct thread *t1, struct thread *t2, void (*func)(void *), void *arg) {
-    struct switchframe *sf = (struct switchframe *) ((char *) t2->kstack + PAGE_SIZE) - 1;
-    struct trap_frame  *tf = (struct trap_frame *) ((char *) t1->kstack + PAGE_SIZE) - 1;
+    struct switchframe *sf = (struct switchframe *) ((char *) t2->t_kstack + PAGE_SIZE) - 1;
+    struct trap_frame  *tf = (struct trap_frame *) ((char *) t1->t_kstack + PAGE_SIZE) - 1;
 
-    t2->ctx.rsp = (u64) sf;
+    t2->t_ctx.rsp = (u64) sf;
     memcpy(&sf->tf, tf, sizeof(struct trap_frame));
 
     sf->tf.regs.rax = 0;
