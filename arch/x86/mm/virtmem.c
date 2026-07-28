@@ -578,7 +578,7 @@ int vm_copyin(pgd_t *pgd, char *dst, virt_addr_t src_virt, size_t len) {
 }
 
 int vm_copyinstr(pgd_t *pgd, void *dst, virt_addr_t srcva, size_t len, size_t *done) {
-    size_t      n;
+    size_t      n, i;
     phys_addr_t pa;
     virt_addr_t va;
     char       *d;
@@ -597,32 +597,41 @@ int vm_copyinstr(pgd_t *pgd, void *dst, virt_addr_t srcva, size_t len, size_t *d
 
         if (!vm_access_ok(pgd, va, n)) { return -EACCES; }
 
-        d = dst;
+        d = (char *) dst;
         s = __va(pa + (srcva - va));
 
+        i = n;
         if (d < s) {
-            while (len--) {
-                if (!*s) { return 0; }
+            while (i--) {
+                if (!*s) {
+                    *d = '\0';
+                    (*done)++;
+                    return 0;
+                }
                 *d++ = *s++;
                 (*done)++;
             }
         } else {
-            char *lasts = (char *) (s + (len - 1));
-            char *lastd = d + (len - 1);
+            char *lasts = (char *) (s + n - 1);
+            char *lastd = d + n - 1;
 
-            while (len--) {
-                if (!*s) { return 0; }
+            while (i--) {
+                if (!*lasts) {
+                    *d = '\0';
+                    (*done)++;
+                    return 0;
+                }
                 *lastd-- = *lasts--;
                 (*done)++;
             }
         }
 
         len -= n;
-        dst += n;
+        dst   = d;
         srcva = va + PAGE_SIZE;
     }
 
-    return 0;
+    return -ENAMETOOLONG;
 }
 
 int vm_access_ok(pgd_t *pgd, virt_addr_t virt, size_t len) {
