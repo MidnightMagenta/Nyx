@@ -21,9 +21,36 @@ section .text
     mov rsi, msg
     mov rdx, len_msg
     syscall
+
+    mov rax, 2
+    mov rdi, testfile_path
+    mov rsi, (1 << 0)
+    syscall
+ 
+    mov r15, rax
+ 
+    mov rax, 0
+    mov rdi, r15
+    mov rsi, buf
+    mov rdx, 256
+    syscall
+
+    mov rdx, rax
+    mov rax, 1
+    mov rsi, buf
+    mov rdi, 1
+    syscall
+
+    mov rax, 3
+    mov rdi, r15
+    syscall
+
 .Loop:
     jmp     .Loop
 
-msg db "test message :)\n"
+msg db "test message :)", 0x0A
 len_msg equ $-msg
 
+testfile_path db "/test/path/a/testfile.txt"
+
+buf times 256 db 0

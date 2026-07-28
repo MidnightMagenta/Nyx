@@ -1,4 +1,5 @@
 #include <nyx/early_serial.h>
+#include <nyx/initcall.h>
 #include <nyx/linkage.h>
 #include <nyx/vfs.h>
 
@@ -34,6 +35,6 @@ static const struct cdevsw console_cdevsw = {
         .d_ioctl = cdev_notty,
 };
 
-void __init init_consoledev() {
+DEFINE_INITCALL(init_consoledev) {
     cdev_register("console", &console_cdevsw, CONSOLE_RDEV, 0666);
 }

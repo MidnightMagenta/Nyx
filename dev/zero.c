@@ -1,3 +1,4 @@
+#include <nyx/initcall.h>
 #include <nyx/linkage.h>
 #include <nyx/vfs.h>
 
@@ -23,6 +24,6 @@ static const struct cdevsw zero_cdevsw = {
         .d_ioctl = cdev_notty,
 };
 
-void __init init_zerodev() {
+DEFINE_INITCALL(init_zerodev) {
     cdev_register("zero", &zero_cdevsw, ZERO_RDEV, 0666);
 }

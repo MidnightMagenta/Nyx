@@ -48,6 +48,10 @@ SECTIONS {
     .init.text BLOCK(0x1000) : {
         *(.init.text*)
         *(.init.rodata*)
+        . = ALIGN(8);
+        __initcalls_start = .;
+        KEEP(*(.initcalls.early))
+        __initcalls_end = .;
     } :init_text
 
     .init.data BLOCK(0x1000) : {

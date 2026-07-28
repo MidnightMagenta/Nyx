@@ -34,6 +34,7 @@ extern void init_timer();
 extern void init_sched();
 extern void init_vfs();
 extern void init_filesystems();
+extern void do_initcalls();
 extern void reaper(void *arg);
 void        init_proc(void *arg);
 
@@ -48,11 +49,7 @@ static __init void mount_root() {
     BUG_ON(vfs_mountroot("cpio", &args));
 }
 
-extern void init_nulldev();
-extern void init_zerodev();
-extern void init_consoledev();
-
-static void __init init_devs() {
+static void __init mount_devfs() {
     struct nameidata nd = {
             .ni_dirp   = "/dev",
             .ni_segflg = UIO_SYSSPACE,
@@ -63,10 +60,6 @@ static void __init init_devs() {
 
     BUG_ON(namei(&nd));
     BUG_ON(do_mount("devfs", nd.ni_vp, NULL, NULL));
-
-    init_nulldev();
-    init_zerodev();
-    init_consoledev();
 }
 
 static __init void start_init() {
@@ -92,7 +85,8 @@ void __init start_kernel() {
     mount_root();
     init_timer();
     init_sched();
-    init_devs();
+    mount_devfs();
+    do_initcalls();
 
     struct nameidata nd;
     nd.ni_dirp   = "/../../test/path/a/../a/././..///../path/a//testfile.txt";
@@ -144,7 +138,12 @@ void fudge_exec() {
     tf->frame.ss          = USER_DATA_SEGMENT;
     tf->frame.rflags      = 0x202;
 
-    vmspace_mapcopy(mm, 0x10000, init_fudgeasm_bin, init_fudgeasm_bin_len, VM_EXEC | VM_READ | VM_USER, M_SLEEPOK);
+    vmspace_mapcopy(mm,
+                    0x10000,
+                    init_fudgeasm_bin,
+                    init_fudgeasm_bin_len,
+                    VM_EXEC | VM_READ | VM_WRITE | VM_USER,
+                    M_SLEEPOK);
 
     oldmm = pr->mm;
 
