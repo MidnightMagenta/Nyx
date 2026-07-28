@@ -20,7 +20,7 @@ all_targets: $(O_TARGET) $(L_TARGET)
 # --------------------------------
 
 %.o: %.c
-	@echo -e "CC $<"
+	@echo -e "CC $@"
 	$(Q)$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $($*_CFLAGS) $(CPPFLAGS) -MMD -MP -c $< -o $@
 
 %.o: %.S

@@ -29,7 +29,7 @@ clean:
 	rm -f image vmnyx.o boot_link.lds
 
 %.o: %.c
-	@echo -e "CC $<"
+	@echo -e "CC $@"
 	$(Q)$(CC) $(CFLAGS) -mgeneral-regs-only -MMD -MP -c $< -o $@
 
 %.o: %.S
