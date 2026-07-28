@@ -17,5 +17,7 @@ To prove it, here's a magic value:
 6202145682195251
 EOF
 
+mkdir -p tmp/initcpio/dev
+
 cd tmp/initcpio
 find . | cpio -o -H newc >../../initramfs

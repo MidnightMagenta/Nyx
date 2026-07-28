@@ -232,6 +232,11 @@ int vop_null(struct vnode *);
 
 int namei(struct nameidata *ndp);
 
+int cdev_register(const char *name, const struct cdevsw *cdev, dev_t dev, u16 mode);
+int cdev_noop(dev_t d, int m);
+int cdev_notty(dev_t d, unsigned long c, void *a);
+int cdev_sink(dev_t d, struct uio *u);
+
 int              fdinit(struct process *p);
 struct filedesc *fdcopy(struct filedesc *src);
 void             fdfree(struct process *p);

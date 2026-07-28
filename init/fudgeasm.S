@@ -1,4 +1,5 @@
 bits 64
+
 org 0x10000
 section .text
     mov     rax, 57
@@ -14,5 +15,15 @@ section .text
     mov rsi, 0
     mov rdx, 0
     syscall
+
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, msg
+    mov rdx, len_msg
+    syscall
 .Loop:
     jmp     .Loop
+
+msg db "test message :)\n"
+len_msg equ $-msg
+

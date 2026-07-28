@@ -59,10 +59,11 @@ LDFLAGS := -static -Bsymbolic -nostdlib
 # --------------------------------
 
 ARCHIVES := init/initar.o kernel/kernelar.o \
-			mm/mmar.o lib/nyxliba.o fs/fsar.o
+			mm/mmar.o lib/nyxliba.o fs/fsar.o \
+			dev/drvar.o
 LIBS     :=
 
-SUBDIRS := init kernel mm lib fs
+SUBDIRS := init kernel mm lib fs dev
 
 PHONY := all do-all vmnyx nyxsubdirs clean distclean symlinks menuconfig config docs tools
 

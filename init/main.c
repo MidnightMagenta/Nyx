@@ -2,8 +2,10 @@
 #include <mm/mm_types.h>
 #include <mm/vmspace.h>
 #include <nyx/current.h>
+#include <nyx/fcntl.h>
 #include <nyx/kernel.h>
 #include <nyx/kthread.h>
+#include <nyx/linkage.h>
 #include <nyx/panic.h>
 #include <nyx/sched.h>
 #include <nyx/stddef.h>
@@ -38,7 +40,7 @@ void        init_proc(void *arg);
 extern struct thread proc0;
 struct thread       *initproc;
 
-static void mount_root() {
+static __init void mount_root() {
     struct cpio_args args = {
             .base = __va(get_initramfs()),
             .len  = get_initramfs_len(),
@@ -46,14 +48,41 @@ static void mount_root() {
     BUG_ON(vfs_mountroot("cpio", &args));
 }
 
-static void start_init() {
+extern void init_nulldev();
+extern void init_zerodev();
+extern void init_consoledev();
+
+static void __init init_devs() {
+    struct nameidata nd = {
+            .ni_dirp   = "/dev",
+            .ni_segflg = UIO_SYSSPACE,
+            .ni_op     = NAMEI_LOOKUP,
+            .ni_flags  = 0,
+            .ni_proc   = current()->proc,
+    };
+
+    BUG_ON(namei(&nd));
+    BUG_ON(do_mount("devfs", nd.ni_vp, NULL, NULL));
+
+    init_nulldev();
+    init_zerodev();
+    init_consoledev();
+}
+
+static __init void start_init() {
+    int stdinfd, stdoutfd, stderrfd;
     if (do_fork(&proc0, FORK_NOZOMBIE | FORK_SHAREVM, &init_proc, NULL, NULL, &initproc) != 0) {
         panic("failed to start init");
     }
     strncpy(initproc->proc->name, "init", PROC_NAME_LEN);
+
+    BUG_ON(vfs_open(initproc->proc, "/dev/console", UIO_SYSSPACE, O_RDWR, 0, &stdinfd));
+    BUG_ON(kern_dup(initproc->proc, stdinfd, &stdoutfd));
+    BUG_ON(kern_dup(initproc->proc, stdinfd, &stderrfd));
+    BUG_ON(stdinfd != 0 || stdoutfd != 1 || stderrfd != 2);
 }
 
-void start_kernel() {
+void __init start_kernel() {
     pr_info("kernel build ID: %s\n", NYX_BUILD_ID);
     setup_arch();
     init_memory();
@@ -63,6 +92,7 @@ void start_kernel() {
     mount_root();
     init_timer();
     init_sched();
+    init_devs();
 
     struct nameidata nd;
     nd.ni_dirp   = "/../../test/path/a/../a/././..///../path/a//testfile.txt";

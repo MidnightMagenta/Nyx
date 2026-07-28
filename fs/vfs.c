@@ -31,9 +31,11 @@ void __init init_vfs() {
 
 // NOTE: probably temporary
 extern void cpiofs_init();
+extern void devfs_init();
 
 void __init init_filesystems() {
     cpiofs_init();
+    devfs_init();
 }
 // ENDNOTE
 
