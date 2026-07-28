@@ -16,4 +16,12 @@ config PHYSMEM_DEV_PRINT
 
 endmenu
 
+menu "Debug"
+
+config MEMORY_DEBUG
+    bool "Print memory debug information"
+    default n
+
+endmenu
+
 endmenu

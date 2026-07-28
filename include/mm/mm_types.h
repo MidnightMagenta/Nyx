@@ -14,24 +14,28 @@
 #define PG_slab     (1 << 2)
 #define PG_pgtable  (1 << 3)
 #define PG_head     (1 << 4)
+#define PG_kmalloc  (1 << 5)
 
 #define PageReserved(page) test_bit(PG_reserved, &(page)->flags)
 #define PageBuddy(page)    test_bit(PG_buddy, &(page)->flags)
 #define PageSlab(page)     test_bit(PG_slab, &(page)->flags)
 #define PagePgtable(page)  test_bit(PG_pgtable, &(page)->flags)
 #define PageHead(page)     test_bit(PG_head, &(page)->flags)
+#define PageKmalloc(page)  test_bit(PG_kmalloc, &(page)->flags)
 
 #define SetPageReserved(page) set_bit(PG_reserved, &(page)->flags)
 #define SetPageBuddy(page)    set_bit(PG_buddy, &(page)->flags)
 #define SetPageSlab(page)     set_bit(PG_slab, &(page)->flags)
 #define SetPagePgtable(page)  set_bit(PG_pgtable, &(page)->flags)
 #define SetPageHead(page)     set_bit(PG_head, &(page)->flags)
+#define SetPageKmalloc(page)  set_bit(PG_kmalloc, &(page)->flags)
 
 #define ClearPageReserved(page) clear_bit(PG_reserved, &(page)->flags)
 #define ClearPageBuddy(page)    clear_bit(PG_buddy, &(page)->flags)
 #define ClearPageSlab(page)     clear_bit(PG_slab, &(page)->flags)
 #define ClearPagePgtable(page)  clear_bit(PG_pgtable, &(page)->flags)
 #define ClearPageHead(page)     clear_bit(PG_head, &(page)->flags)
+#define ClearPageKmalloc(page)  clear_bit(PG_kmalloc, &(page)->flags)
 
 #define __M_DMA     (1 << 0)
 #define __M_DMA32   (1 << 1)
