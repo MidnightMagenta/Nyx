@@ -114,7 +114,7 @@ static int cpio_insert(struct cpio_mount *cm,
         struct fsnode *child = fsnode_child(dir, comp, clen);
         if (!child) {
             struct cpio_node *cn = cpio_node_alloc(comp, clen, last ? type : VDIR);
-            if (!cn) { return ENOMEM; }
+            if (!cn) { return -ENOMEM; }
 
             cn->c_node.fn_ino  = last ? ino : cm->cm_nextino++;
             cn->c_node.fn_mode = last ? mode : 0755;
@@ -134,7 +134,7 @@ static int cpio_insert(struct cpio_mount *cm,
         }
 
         if (last) { return 0; }
-        if (child->fn_type != VDIR) { return ENOTDIR; }
+        if (child->fn_type != VDIR) { return -ENOTDIR; }
         dir = child;
     }
     return 0;
@@ -152,24 +152,24 @@ static int cpio_parse(struct cpio_mount *cm) {
         size_t      name_off, nlen, data_off;
         const u8   *data;
 
-        if (off + 110 > len) { return EINVAL; }
+        if (off + 110 > len) { return -EINVAL; }
         h = (const char *) (base + off);
-        if (memcmp(h, "070701", 6) != 0 && memcmp(h, "070702", 6) != 0) { return EINVAL; }
+        if (memcmp(h, "070701", 6) != 0 && memcmp(h, "070702", 6) != 0) { return -EINVAL; }
 
         mode     = hex8(h + 14);
         filesize = hex8(h + 54);
         namesize = hex8(h + 94);
 
         name_off = off + 110;
-        if (name_off + namesize > len || namesize == 0) { return EINVAL; }
+        if (name_off + namesize > len || namesize == 0) { return -EINVAL; }
         name = (const char *) (base + name_off);
-        if (name[namesize - 1] != '\0') { return EINVAL; }
+        if (name[namesize - 1] != '\0') { return -EINVAL; }
         nlen = namesize - 1;
 
         if (nlen == 10 && memcmp(name, "TRAILER!!!", 10) == 0) { break; }
 
         data_off = align4(name_off + namesize);
-        if (data_off + filesize > len) { return EINVAL; }
+        if (data_off + filesize > len) { return -EINVAL; }
         data = base + data_off;
 
         if (nlen == 1 && name[0] == '.') {
@@ -196,7 +196,7 @@ static void cpio_free_tree(struct cpio_node *cn) {
 
 static int cpio_open(struct vnode *vp, int mode) {
     (void) vp;
-    if ((mode & O_ACCMODE) != O_RDONLY) { return EROFS; }
+    if ((mode & O_ACCMODE) != O_RDONLY) { return -EROFS; }
     return 0;
 }
 
@@ -204,9 +204,9 @@ static int cpio_read(struct vnode *vp, struct uio *uio, int ioflag) {
     struct cpio_node *cn = VTOCN(vp);
     (void) ioflag;
 
-    if (vp->v_type == VDIR) { return EISDIR; }
-    if (vp->v_type != VREG && vp->v_type != VLNK) { return EINVAL; }
-    if (uio->uio_offset < 0) { return EINVAL; }
+    if (vp->v_type == VDIR) { return -EISDIR; }
+    if (vp->v_type != VREG && vp->v_type != VLNK) { return -EINVAL; }
+    if (uio->uio_offset < 0) { return -EINVAL; }
     if ((size_t) uio->uio_offset >= cn->n_size) { return 0; }
 
     size_t avail = cn->n_size - (size_t) uio->uio_offset;
@@ -217,7 +217,7 @@ static int cpio_write(struct vnode *vp, struct uio *uio, int ioflag) {
     (void) vp;
     (void) uio;
     (void) ioflag;
-    return EROFS;
+    return -EROFS;
 }
 
 static int cpio_getattr(struct vnode *vp, struct vattr *vap) {
@@ -255,10 +255,10 @@ static const struct vnodeops cpio_vnodeops = {
 
 static int cpio_mount(struct mount *mp, void *data) {
     struct cpio_args *args = data;
-    if (!args || !args->base || args->len < 110) { return EINVAL; }
+    if (!args || !args->base || args->len < 110) { return -EINVAL; }
 
     struct cpio_mount *cm = kmalloc(sizeof(*cm), M_SLEEPOK);
-    if (!cm) { return ENOMEM; }
+    if (!cm) { return -ENOMEM; }
 
     memset(cm, 0, sizeof(*cm));
     cm->cm_base    = (const u8 *) args->base;
